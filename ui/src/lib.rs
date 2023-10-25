@@ -5,7 +5,7 @@ mod platform;
 mod wgpu;
 mod assets;
 
-// Lota的异常类
+// 程序的异常类
 #[derive(Debug, Clone)]
 pub struct Exception {
     info: String,

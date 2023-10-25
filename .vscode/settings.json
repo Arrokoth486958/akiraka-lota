@@ -10,5 +10,5 @@
     "editor.fontSize": 16,
     "editor.insertSpaces": true,
     "terminal.integrated.fontFamily": "'AcPlus IBM VGA 8x16', 'Unifont'",
-    "terminal.integrated.fontSize": 18
+    "terminal.integrated.fontSize": 20
 }

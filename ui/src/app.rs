@@ -36,7 +36,8 @@ pub fn launch() {
         use winit::platform::windows::WindowBuilderExtWindows;
         window_builder = window_builder
             .with_undecorated_shadow(true)
-            .with_decorations(false)
+            // TODO: 自定义窗口还要等等
+            // .with_decorations(false)
             .with_transparent(true);
     }
     
