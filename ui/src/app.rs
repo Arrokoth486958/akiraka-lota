@@ -1,3 +1,4 @@
+use wgpu::SurfaceError;
 use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
@@ -32,17 +33,21 @@ pub fn launch() {
     }
     #[cfg(target_os = "windows")]
     {
-        // use winit::platform::windows;
+        use winit::platform::windows::WindowBuilderExtWindows;
+        window_builder = window_builder
+            .with_undecorated_shadow(true)
+            .with_decorations(false)
+            .with_transparent(true);
     }
     
     let window = window_builder
         .build(&event_loop)
         .unwrap();
 
-    let monitor_size = window.current_monitor().unwrap().size();
-    let window_size = window.inner_size();
-    println!("{:?}", monitor_size);
-    println!("{:?}", window_size);
+    // let monitor_size = window.current_monitor().unwrap().size();
+    // let window_size = window.inner_size();
+    // println!("{:?}", monitor_size);
+    // println!("{:?}", window_size);
 
     // TODO: 还是一些特定平台的函数
     #[cfg(target_os = "macos")]
@@ -51,11 +56,11 @@ pub fn launch() {
     }
     #[cfg(target_os = "windows")]
     {
-        use platform::windows::WindowExtWindows;
-        window.set_decorations(false);
-        window.set_undecorated_shadow(true);
-        // window.drag_resize_window(winit::window::ResizeDirection::NorthWest);
-        window.set_transparent(true);
+        // use winit::platform::windows::WindowExtWindows;
+        // window.set_decorations(false);
+        // window.set_undecorated_shadow(true);
+        // // window.drag_resize_window(winit::window::ResizeDirection::NorthWest);
+        // window.set_transparent(true);
     }
 
     // Wgpu实例
@@ -87,6 +92,31 @@ pub fn launch() {
                             // 或许有更好的解决方案
                             println!("{:?}", size);
                             wgpu_instance.resize(size);
+                        }
+                        WindowEvent::KeyboardInput { 
+                            ..
+                        } => {
+                            wgpu_instance.input(event);
+                            wgpu_instance.update();
+                        }
+                        WindowEvent::RedrawRequested => {
+                            wgpu_instance.update();
+                            match wgpu_instance.render() {
+                                Ok(()) => {},
+                                Err(SurfaceError::Lost) => wgpu_instance.resize(wgpu_instance.size),
+                                Err(SurfaceError::OutOfMemory) => elwt.exit(),
+                                Err(e) => eprintln!("{}", e),
+                            }
+                            // if window_id == window.id() {
+                            //     gl_state.update();
+                            //     // 渲染并处理错误
+                            //     match gl_state.render() {
+                            //         Ok(_) => {}
+                            //         Err(SurfaceError::Lost) => gl_state.resize(gl_state.size),
+                            //         Err(SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
+                            //         Err(e) => eprintln!("{}", e),
+                            //     };
+                            // }
                         }
                         _ => {
                             // println!("{:?}", event);

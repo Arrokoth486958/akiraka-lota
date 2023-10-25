@@ -12,12 +12,12 @@ use crate::{Exception, assets::Assets};
 // 好哎！
 // https://jinleili.github.io/learn-wgpu-zh/beginner/tutorial2-surface/
 pub struct WGPUInstance {
-    surface: Surface,
-    device: Device,
-    queue: Queue,
-    config: SurfaceConfiguration,
-    size: PhysicalSize<u32>,
-    render_pipelines: HashMap<String, RenderPipeline>,
+    pub surface: Surface,
+    pub device: Device,
+    pub queue: Queue,
+    pub config: SurfaceConfiguration,
+    pub size: PhysicalSize<u32>,
+    pub render_pipelines: HashMap<String, RenderPipeline>,
 }
 
 impl WGPUInstance {
@@ -149,7 +149,7 @@ impl WGPUInstance {
         }
     }
 
-    pub fn input(&mut self, event: &WindowEvent) -> bool {
+    pub fn input(&mut self, _event: &WindowEvent) -> bool {
         // TODO: 输入这部分还没做 =w=
         false
     }
