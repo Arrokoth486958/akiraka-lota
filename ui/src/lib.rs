@@ -3,6 +3,7 @@ use std::{error::Error, fmt::Display};
 mod app;
 mod platform;
 mod wgpu;
+mod assets;
 
 // Lota的异常类
 #[derive(Debug, Clone)]

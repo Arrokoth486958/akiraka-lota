@@ -1,16 +1,23 @@
+use std::collections::HashMap;
+
 use wgpu::{
     Adapter, Backends, Device, DeviceDescriptor, Features, Instance, InstanceDescriptor, Limits,
     PowerPreference, Queue, RequestAdapterOptions, Surface, SurfaceConfiguration, SurfaceError,
-    TextureUsages,
+    TextureUsages, RenderPipeline, ShaderModuleDescriptor, PipelineLayoutDescriptor, RenderPipelineDescriptor, VertexState, ColorTargetState, BlendState, ColorWrites, FragmentState, PrimitiveState, Face, MultisampleState,
 };
 use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
 
+use crate::{Exception, assets::Assets};
+
+// 好哎！
+// https://jinleili.github.io/learn-wgpu-zh/beginner/tutorial2-surface/
 pub struct WGPUInstance {
     surface: Surface,
     device: Device,
     queue: Queue,
     config: SurfaceConfiguration,
     size: PhysicalSize<u32>,
+    render_pipelines: HashMap<String, RenderPipeline>,
 }
 
 impl WGPUInstance {
@@ -70,12 +77,66 @@ impl WGPUInstance {
         };
         surface.configure(&device, &config);
 
+        let mut render_pipelines = HashMap::new();
+
+        fn position_color(device: &Device, config: &SurfaceConfiguration) -> Result<RenderPipeline, Exception> {
+            let shader_path: String = "position_color".into();
+            let binding = Assets::get((format!("shaders/{}.wgsl", shader_path.clone())).as_str()).unwrap();
+            let src = std::str::from_utf8(&binding.data).unwrap();
+            let shader = device.create_shader_module(ShaderModuleDescriptor {
+                label: Some(shader_path.as_str()),
+                source: wgpu::ShaderSource::Wgsl(src.into()),
+            });
+            let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
+                label: Some((shader_path.clone() + "_pipeline_layout").as_str()),
+                bind_group_layouts: &[],
+                push_constant_ranges: &[],
+            });
+            let pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
+                label: Some((shader_path.clone() + "_pipeline").as_str()),
+                layout: Some(&pipeline_layout),
+                vertex: VertexState {
+                    module: &shader,
+                    entry_point: "vs_main",
+                    buffers: &[],
+                },
+                fragment: Some(FragmentState {
+                    module: &shader,
+                    entry_point: "fs_main",
+                    targets: &[Some(ColorTargetState {
+                        format: config.format,
+                        blend: Some(BlendState::ALPHA_BLENDING),
+                        write_mask: ColorWrites::ALL,
+                    })],
+                }),
+                primitive: PrimitiveState {
+                    topology: wgpu::PrimitiveTopology::TriangleList,
+                    strip_index_format: None,
+                    front_face: wgpu::FrontFace::Ccw,
+                    cull_mode: Some(Face::Back),
+                    polygon_mode: wgpu::PolygonMode::Fill,
+                    unclipped_depth: false,
+                    conservative: false,
+                },
+                depth_stencil: None,
+                multisample: MultisampleState {
+                    count: 1, 
+                    mask: !0, 
+                    alpha_to_coverage_enabled: false,
+                },
+                multiview: None,
+            });
+            Ok(pipeline)
+        }
+        render_pipelines.insert("position_color".into(), position_color(&device, &config).unwrap());
+
         WGPUInstance {
             surface,
             device,
             queue,
             config,
             size,
+            render_pipelines,
         }
     }
 
@@ -85,19 +146,25 @@ impl WGPUInstance {
             self.config.width = self.size.width;
             self.config.height = self.size.height;
             self.surface.configure(&self.device, &self.config);
-            println!("{:?}", new_size);
         }
     }
 
     pub fn input(&mut self, event: &WindowEvent) -> bool {
+        // TODO: 输入这部分还没做 =w=
         false
     }
 
     pub fn update(&mut self) {
-        todo!()
+        // TODO: 啥也没有 owo
     }
 
     pub fn render(&mut self) -> Result<(), SurfaceError> {
-        todo!()
+        // TODO: 还是啥也没有 0.o
+        Ok(())
     }
+
+    // 好像没啥用
+    // pub fn load_pipeline(&mut self, shader_path: String) -> Result<RenderPipeline, Exception> {
+    //     todo!()
+    // }
 }

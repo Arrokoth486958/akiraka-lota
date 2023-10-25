@@ -2,7 +2,7 @@ use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
     event_loop::EventLoop,
-    window::{WindowBuilder, WindowButtons},
+    window::{WindowBuilder, WindowButtons}, platform::windows::WindowExtWindows,
 };
 
 use crate::wgpu::WGPUInstance;
@@ -42,6 +42,9 @@ pub fn launch() {
     }
     #[cfg(target_os = "windows")]
     {
+        window.set_decorations(false);
+        window.set_undecorated_shadow(true);
+        // window.drag_resize_window(winit::window::ResizeDirection::NorthWest);
         window.set_transparent(true);
     }
 
