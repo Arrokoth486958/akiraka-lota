@@ -2,7 +2,7 @@ use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
     event_loop::EventLoop,
-    window::{WindowBuilder, WindowButtons}, platform::windows::WindowExtWindows,
+    window::{WindowBuilder, WindowButtons},
 };
 
 use crate::wgpu::WGPUInstance;
@@ -13,16 +13,29 @@ use crate::wgpu::WGPUInstance;
 
 pub fn launch() {
     let event_loop = EventLoop::new().unwrap();
-    let window = WindowBuilder::new()
-        // .with_titlebar_transparent(true)
-        // .with_title_hidden(true)
-        // .with_fullsize_content_view(true)
-        // .with_blur(true)
+    let mut window_builder = WindowBuilder::new()
         .with_enabled_buttons(WindowButtons::CLOSE | WindowButtons::MINIMIZE)
         .with_inner_size(LogicalSize::new(600, 400))
         .with_min_inner_size(LogicalSize::new(600, 400))
-        .with_visible(false)
-        // .with_transparent(false)
+        .with_visible(false);
+
+    // TODO: 一些特定平台的函数
+    #[cfg(target_os = "macos")]
+    {
+        use winit::platform::macos::WindowBuilderExtMacOS;
+        use crate::{platform::macos::apply_empty_tool_bar, wgpu::WGPUInstance};
+
+        window_builder = window_builder
+            .with_titlebar_transparent(true)
+            .with_fullsize_content_view(true)
+            .with_title_hidden(true);
+    }
+    #[cfg(target_os = "windows")]
+    {
+        // use winit::platform::windows;
+    }
+    
+    let window = window_builder
         .build(&event_loop)
         .unwrap();
 
@@ -31,17 +44,14 @@ pub fn launch() {
     println!("{:?}", monitor_size);
     println!("{:?}", window_size);
 
-    // TODO: 一些特定平台的函数
+    // TODO: 还是一些特定平台的函数
     #[cfg(target_os = "macos")]
     {
-        // use platform::macos::WindowBuilderExtMacOS,
-        use crate::{platform::macos::apply_empty_tool_bar, wgpu::WGPUInstance};
-
-        crate::platform::macos::init_window(&window);
-        // window.
+        crate::platform::macos::init_window(&window).expect("Could not configure custom Window Settings for macOS!");
     }
     #[cfg(target_os = "windows")]
     {
+        use platform::windows::WindowExtWindows;
         window.set_decorations(false);
         window.set_undecorated_shadow(true);
         // window.drag_resize_window(winit::window::ResizeDirection::NorthWest);
