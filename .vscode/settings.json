@@ -9,6 +9,6 @@
     "editor.fontFamily": "'Century Gothic', 'Yu Gothic UI'",
     "editor.fontSize": 16,
     "editor.insertSpaces": true,
-    "terminal.integrated.fontFamily": "'AcPlus IBM VGA 8x16'",
+    "terminal.integrated.fontFamily": "'AcPlus IBM VGA 8x16', 'Unifont'",
     "terminal.integrated.fontSize": 18
 }

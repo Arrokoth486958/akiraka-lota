@@ -16,24 +16,8 @@ pollster = "0.3.0"
 rust-embed = "6.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-cocoa = "0.25"
 objc = "0.2"
+cocoa = "0.25.0"
 
 [dependencies.winit]
 features = ["rwh_05"]
-
-[target.'cfg(target_os = "macos")'.dependencies.icrate]
-version = "0.0.4"
-features = [
-    "dispatch",
-    "Foundation",
-    "Foundation_NSArray",
-    "Foundation_NSAttributedString",
-    "Foundation_NSMutableAttributedString",
-    "Foundation_NSData",
-    "Foundation_NSDictionary",
-    "Foundation_NSString",
-    "Foundation_NSProcessInfo",
-    "Foundation_NSThread",
-    "Foundation_NSNumber",
-]
