@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, f32::consts::E};
 
 use wgpu::{Adapter, Backends, Device, DeviceDescriptor, Features, Instance, InstanceDescriptor, Limits, PowerPreference, Queue, RequestAdapterOptions, Surface, SurfaceConfiguration, SurfaceError, TextureUsages, RenderPipeline, ShaderModuleDescriptor, PipelineLayoutDescriptor, RenderPipelineDescriptor, VertexState, ColorTargetState, BlendState, ColorWrites, FragmentState, PrimitiveState, Face, MultisampleState, RenderPassDescriptor, RenderPassColorAttachment, Operations, LoadOp, TextureFormat, CompositeAlphaMode};
 use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
@@ -64,6 +64,12 @@ impl WGPUInstance {
         let caps = surface.get_capabilities(&adapter);
 
         // println!("{:?}", caps.alpha_modes);
+        let alpha_channel = if caps.alpha_modes.contains(&CompositeAlphaMode::PostMultiplied) {
+            CompositeAlphaMode::PostMultiplied
+        } else {
+            caps.alpha_modes[0]
+        };
+        println!("{:?}", alpha_channel);
         let config = SurfaceConfiguration {
             usage: TextureUsages::RENDER_ATTACHMENT,
             format: caps.formats[0],
@@ -71,7 +77,7 @@ impl WGPUInstance {
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
             // alpha_mode: caps.alpha_modes[0],
-            alpha_mode: CompositeAlphaMode::PostMultiplied,
+            alpha_mode: alpha_channel,
             view_formats: vec![],
         };
         surface.configure(&device, &config);
