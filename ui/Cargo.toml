@@ -6,3 +6,33 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+env_logger = "0.10"
+log = "0.4"
+wgpu = "0.17"
+window-vibrancy = "0.4.2"
+window-shadows = "0.2.2"
+raw-window-handle = "0.5"
+pollster = "0.3.0"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+cocoa = "0.25"
+objc = "0.2"
+
+[dependencies.winit]
+features = ["rwh_05"]
+
+[target.'cfg(target_os = "macos")'.dependencies.icrate]
+version = "0.0.4"
+features = [
+    "dispatch",
+    "Foundation",
+    "Foundation_NSArray",
+    "Foundation_NSAttributedString",
+    "Foundation_NSMutableAttributedString",
+    "Foundation_NSData",
+    "Foundation_NSDictionary",
+    "Foundation_NSString",
+    "Foundation_NSProcessInfo",
+    "Foundation_NSThread",
+    "Foundation_NSNumber",
+]

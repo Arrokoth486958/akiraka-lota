@@ -1,0 +1,10 @@
+/Users/arrokoth/Documents/workspace/lota/ui/target/debug/deps/rustkit_clang_sys-14cbde5433db6752.rmeta: /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/lib.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/support.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/link.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/../build.rs
+
+/Users/arrokoth/Documents/workspace/lota/ui/target/debug/deps/librustkit_clang_sys-14cbde5433db6752.rlib: /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/lib.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/support.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/link.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/../build.rs
+
+/Users/arrokoth/Documents/workspace/lota/ui/target/debug/deps/rustkit_clang_sys-14cbde5433db6752.d: /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/lib.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/support.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/link.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/../build.rs
+
+/Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/lib.rs:
+/Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/support.rs:
+/Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/link.rs:
+/Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/rustkit-clang-sys-0.24.0/src/../build.rs:

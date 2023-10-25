@@ -1,0 +1,12 @@
+/Users/arrokoth/Documents/workspace/lota/ui/target/debug/deps/os_info-11484f55c10dc786.rmeta: /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/lib.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/macos/mod.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/architecture.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/bitness.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/info.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/matcher.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/os_type.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/version.rs
+
+/Users/arrokoth/Documents/workspace/lota/ui/target/debug/deps/os_info-11484f55c10dc786.d: /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/lib.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/macos/mod.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/architecture.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/bitness.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/info.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/matcher.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/os_type.rs /Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/version.rs
+
+/Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/lib.rs:
+/Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/macos/mod.rs:
+/Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/architecture.rs:
+/Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/bitness.rs:
+/Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/info.rs:
+/Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/matcher.rs:
+/Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/os_type.rs:
+/Users/arrokoth/.cargo/registry/src/index.crates.io-6f17d22bba15001f/os_info-3.7.0/src/version.rs:
