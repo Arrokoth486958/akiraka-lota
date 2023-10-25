@@ -1,0 +1,14 @@
+{
+    "editor.cursorBlinking": "smooth",
+    "editor.formatOnPaste": true,
+    "editor.formatOnType": true,
+    "editor.smoothScrolling": true,
+    "editor.tabCompletion": "on",
+    "editor.fontFamily": "'Ac437 IBM VGA 8x16', 'Unifont', 'Microsoft JhengHei', '思源黑体 CN'",
+    "editor.fontSize": 18,
+    "editor.cursorStyle": "line",
+    "editor.cursorSmoothCaretAnimation": "on",
+    "editor.insertSpaces": true,
+    "terminal.integrated.fontFamily": "'AcPlus IBM VGA 8x16'",
+    "terminal.integrated.fontSize": 18
+}

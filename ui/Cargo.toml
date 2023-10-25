@@ -14,7 +14,7 @@ window-shadows = "0.2.2"
 raw-window-handle = "0.5"
 pollster = "0.3.0"
 
-[target.'cfg(target_os = "macos")'.dependencies]
+[target.'cfg(target_os="macos")'.dependencies.winapi]
 cocoa = "0.25"
 objc = "0.2"
 

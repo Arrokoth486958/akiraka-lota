@@ -6,6 +6,7 @@ use crate::Exception;
 
 // pub const Y: f64 = 20.0;
 
+#[cfg(target_os = "macos")]
 pub fn init_window(window: &Window) -> Result<(), Exception> {
     // 效果不好的函数，使我的领带旋转
     // update_window(window)
@@ -16,15 +17,15 @@ pub fn init_window(window: &Window) -> Result<(), Exception> {
     Ok(())
 }
 
+#[cfg(target_os = "macos")]
 pub fn apply_empty_tool_bar(window: &Window) -> Result<(), Exception> {
     let raw_window_handle = window.raw_window_handle();
     match raw_window_handle {
-        #[cfg(target_os = "macos")]
         raw_window_handle::RawWindowHandle::AppKit(handle) => {
             extern crate objc;
             use cocoa::appkit::NSWindow;
             use cocoa::base::id;
-            use objc::{class, msg_send, sel, sel_impl, runtime::NO};
+            use objc::{class, msg_send, runtime::NO, sel, sel_impl};
 
             let ns_window = handle.ns_window as id;
             unsafe {

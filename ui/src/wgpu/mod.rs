@@ -1,5 +1,9 @@
-use wgpu::{Device, Surface, Queue, SurfaceConfiguration, Instance, InstanceDescriptor, Backends, SurfaceError, RequestAdapterOptions, Adapter, DeviceDescriptor, Features, Limits, TextureUsages};
-use winit::{dpi::PhysicalSize, window::Window, event::WindowEvent};
+use wgpu::{
+    Adapter, Backends, Device, DeviceDescriptor, Features, Instance, InstanceDescriptor, Limits,
+    PowerPreference, Queue, RequestAdapterOptions, Surface, SurfaceConfiguration, SurfaceError,
+    TextureUsages,
+};
+use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
 
 pub struct WGPUInstance {
     surface: Surface,
@@ -15,33 +19,42 @@ impl WGPUInstance {
         let size = window.inner_size();
 
         let instance = Instance::new(InstanceDescriptor {
-            backends: Backends ::all(),
+            backends: Backends::all(),
             dx12_shader_compiler: Default::default(),
         });
 
         let surface = unsafe { instance.create_surface(window) }.unwrap();
-        
+
         async fn request_adapter(instance: &Instance, surface: &Surface) -> Adapter {
-            instance.request_adapter(&RequestAdapterOptions {
-                compatible_surface: Some( surface),
-                power_preference: wgpu::PowerPreference::LowPower,
-                // TODO: 设置强制使用CPU渲染
-                force_fallback_adapter: false,
-            }).await.unwrap()
+            instance
+                .request_adapter(&RequestAdapterOptions {
+                    compatible_surface: Some(surface),
+                    power_preference: PowerPreference::HighPerformance,
+                    // TODO: 设置强制使用CPU渲染
+                    force_fallback_adapter: false,
+                })
+                .await
+                .unwrap()
         }
-        
+
         let adapter = pollster::block_on(request_adapter(&instance, &surface));
-        println!("{:?}", adapter.get_info()); 
+        println!("{:?}", adapter.get_info());
         for i in instance.enumerate_adapters(Backends::all()) {
             println!("{:?}", i.get_info());
         }
 
         async fn request_device(adapter: &Adapter) -> (Device, Queue) {
-            adapter.request_device(&DeviceDescriptor {
-                features: Features::default(),
-                label: None,
-                limits: Limits::downlevel_defaults(),
-            }, None).await.unwrap()
+            adapter
+                .request_device(
+                    &DeviceDescriptor {
+                        features: Features::default(),
+                        label: None,
+                        limits: Limits::downlevel_defaults(),
+                    },
+                    None,
+                )
+                .await
+                .unwrap()
         }
         let (device, queue) = pollster::block_on(request_device(&adapter));
 
@@ -56,7 +69,7 @@ impl WGPUInstance {
             view_formats: vec![],
         };
         surface.configure(&device, &config);
-        
+
         WGPUInstance {
             surface,
             device,
@@ -88,4 +101,3 @@ impl WGPUInstance {
         todo!()
     }
 }
-

@@ -767,7 +767,6 @@ checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 name = "lota"
 version = "0.1.0"
 dependencies = [
- "cocoa",
  "env_logger",
  "log",
  "ui",
@@ -1461,14 +1460,13 @@ checksum = "49d64318d8311fc2668e48b63969f4343e0a85c4a109aa8460d6672e364b8bd1"
 name = "ui"
 version = "0.1.0"
 dependencies = [
- "cocoa",
  "env_logger",
  "icrate",
  "log",
- "objc",
  "pollster",
  "raw-window-handle 0.5.2",
  "wgpu",
+ "winapi",
  "window-shadows",
  "window-vibrancy",
  "winit",

@@ -2,28 +2,27 @@ use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
     event_loop::EventLoop,
-    platform::macos::WindowBuilderExtMacOS,
     window::{WindowBuilder, WindowButtons},
 };
 
-use crate::{platform::macos::apply_empty_tool_bar, wgpu::WGPUInstance};
+use crate::wgpu::WGPUInstance;
 
-struct LauncherState {
-    // 用来传递应用启动参数
-}
+// struct LauncherState {
+//     // TODO: 用来传递应用启动参数
+// }
 
 pub fn launch() {
     let event_loop = EventLoop::new().unwrap();
     let window = WindowBuilder::new()
-        .with_titlebar_transparent(true)
-        .with_title_hidden(true)
-        .with_fullsize_content_view(true)
-        .with_blur(true)
+        // .with_titlebar_transparent(true)
+        // .with_title_hidden(true)
+        // .with_fullsize_content_view(true)
+        // .with_blur(true)
         .with_enabled_buttons(WindowButtons::CLOSE | WindowButtons::MINIMIZE)
         .with_inner_size(LogicalSize::new(600, 400))
         .with_min_inner_size(LogicalSize::new(600, 400))
         .with_visible(false)
-        .with_transparent(false)
+        // .with_transparent(false)
         .build(&event_loop)
         .unwrap();
 
@@ -34,7 +33,17 @@ pub fn launch() {
 
     // TODO: 一些特定平台的函数
     #[cfg(target_os = "macos")]
-    crate::platform::macos::init_window(&window);
+    {
+        // use platform::macos::WindowBuilderExtMacOS,
+        use crate::{platform::macos::apply_empty_tool_bar, wgpu::WGPUInstance};
+
+        crate::platform::macos::init_window(&window);
+        // window.
+    }
+    #[cfg(target_os = "windows")]
+    {
+        window.set_transparent(true);
+    }
 
     // Wgpu实例
     let mut wgpu_instance = WGPUInstance::new(&window);
@@ -55,12 +64,12 @@ pub fn launch() {
                             // 在Windows下修复快捷键退出最小化情况下窗口在后台情况下
                             window.focus_window();
                             // TODO: 窗口更新的本地方法
-                            // #[cfg(target_os = "macos")]
-                            // crate::platform::macos::update_window(&window);
                             // 刷新WGPU实例
                             wgpu_instance.resize(*size);
                         }
-                        WindowEvent::ScaleFactorChanged { inner_size_writer, .. } => {
+                        WindowEvent::ScaleFactorChanged {
+                            ..
+                        } => {
                             let size = window.inner_size();
                             // 或许有更好的解决方案
                             println!("{:?}", size);

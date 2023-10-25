@@ -4,8 +4,6 @@ mod app;
 mod platform;
 mod wgpu;
 
-type Result<T> = std::result::Result<T, Exception>;
-
 // Lota的异常类
 #[derive(Debug, Clone)]
 pub struct Exception {
