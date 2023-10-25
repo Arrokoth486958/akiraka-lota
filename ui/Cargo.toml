@@ -8,12 +8,15 @@ edition = "2021"
 [dependencies]
 env_logger = "0.10"
 log = "0.4"
-wgpu = "0.17"
 window-vibrancy = "0.4.2"
 window-shadows = "0.2.2"
 raw-window-handle = "0.5"
 pollster = "0.3.0"
 rust-embed = "6.0"
+
+[dependencies.wgpu]
+version = "0.17"
+features = ["default"]
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc = "0.2"

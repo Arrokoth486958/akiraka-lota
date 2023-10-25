@@ -1,10 +1,6 @@
 use std::collections::HashMap;
 
-use wgpu::{
-    Adapter, Backends, Device, DeviceDescriptor, Features, Instance, InstanceDescriptor, Limits,
-    PowerPreference, Queue, RequestAdapterOptions, Surface, SurfaceConfiguration, SurfaceError,
-    TextureUsages, RenderPipeline, ShaderModuleDescriptor, PipelineLayoutDescriptor, RenderPipelineDescriptor, VertexState, ColorTargetState, BlendState, ColorWrites, FragmentState, PrimitiveState, Face, MultisampleState, RenderPassDescriptor, RenderPassColorAttachment, Operations, LoadOp,
-};
+use wgpu::{Adapter, Backends, Device, DeviceDescriptor, Features, Instance, InstanceDescriptor, Limits, PowerPreference, Queue, RequestAdapterOptions, Surface, SurfaceConfiguration, SurfaceError, TextureUsages, RenderPipeline, ShaderModuleDescriptor, PipelineLayoutDescriptor, RenderPipelineDescriptor, VertexState, ColorTargetState, BlendState, ColorWrites, FragmentState, PrimitiveState, Face, MultisampleState, RenderPassDescriptor, RenderPassColorAttachment, Operations, LoadOp, TextureFormat, CompositeAlphaMode};
 use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
 
 use crate::{Exception, assets::Assets};
@@ -66,13 +62,16 @@ impl WGPUInstance {
         let (device, queue) = pollster::block_on(request_device(&adapter));
 
         let caps = surface.get_capabilities(&adapter);
+
+        // println!("{:?}", caps.alpha_modes);
         let config = SurfaceConfiguration {
             usage: TextureUsages::RENDER_ATTACHMENT,
             format: caps.formats[0],
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
-            alpha_mode: caps.alpha_modes[0],
+            // alpha_mode: caps.alpha_modes[0],
+            alpha_mode: CompositeAlphaMode::PostMultiplied,
             view_formats: vec![],
         };
         surface.configure(&device, &config);
@@ -105,8 +104,8 @@ impl WGPUInstance {
                     entry_point: "fs_main",
                     targets: &[Some(ColorTargetState {
                         format: config.format,
-                        blend: Some(BlendState::ALPHA_BLENDING),
-                        write_mask: ColorWrites::ALL,
+                        blend: Some(BlendState::PREMULTIPLIED_ALPHA_BLENDING),
+                        write_mask: ColorWrites::all(),
                     })],
                 }),
                 primitive: PrimitiveState {

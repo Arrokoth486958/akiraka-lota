@@ -12,8 +12,8 @@ pub fn init_window(window: &Window) -> Result<(), Exception> {
     // update_window(window)
 
     apply_empty_tool_bar(window).unwrap();
-    window_vibrancy::apply_vibrancy(window, NSVisualEffectMaterial::Sidebar, None, None)
-        .expect("Could not apply Window Vibrancy!");
+    // window_vibrancy::apply_vibrancy(window, NSVisualEffectMaterial::Sidebar, None, None)
+    //     .expect("Could not apply Window Vibrancy!");
     Ok(())
 }
 
