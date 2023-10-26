@@ -3,6 +3,7 @@
 struct VertexInput {
     @location(0) position: vec3f,
     @location(1) color: vec3f,
+    @location(2) uv: vec3f,
 };
 
 struct VertexOutput {

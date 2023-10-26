@@ -13,26 +13,13 @@ use crate::{Exception, assets::Assets};
 pub struct Vertex {
     pub position: [f32; 3],
     pub color: [f32; 3],
-    // pub uv: [f32; 3],
+    pub uv: [f32; 3],
 }
 
 impl Vertex {
-    const ATTRIBS: [VertexAttribute; 2] = wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x3];
+    const ATTRIBS: [VertexAttribute; 3] = wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x3, 2 => Float32x3];
 
     pub fn desc<'a>() -> VertexBufferLayout<'a> {
-        // let x = &wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x3];
-        // let y = &[
-        //         VertexAttribute {
-        //             offset: 0,
-        //             shader_location: 0,
-        //             format: VertexFormat::Float32x3,
-        //         },
-        //         VertexAttribute {
-        //             offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
-        //             shader_location: 1,
-        //             format: VertexFormat::Float32x3,
-        //         }
-        //     ];
         VertexBufferLayout {
             array_stride: std::mem::size_of::<Vertex>() as BufferAddress,
             step_mode: wgpu::VertexStepMode::Vertex,
@@ -42,9 +29,9 @@ impl Vertex {
 }
 
 const VERTICES: &[Vertex] = &[
-    Vertex { position: [0.0, 0.5, 0.0], color: [1.0, 0.0, 0.0] },
-    Vertex { position: [-0.5, -0.5, 0.0], color: [0.0, 1.0, 0.0] },
-    Vertex { position: [0.5, -0.5, 0.0], color: [0.0, 0.0, 1.0] },
+    Vertex { position: [0.0, 0.5, 0.0], color: [1.0, 0.0, 0.0], uv: [0.0, 0.0, 0.0], },
+    Vertex { position: [-0.5, -0.5, 0.0], color: [0.0, 1.0, 0.0], uv: [0.0, 0.0, 0.0], },
+    Vertex { position: [0.5, -0.5, 0.0], color: [0.0, 0.0, 1.0], uv: [0.0, 0.0, 0.0], },
 ];
 
 // 好哎！
