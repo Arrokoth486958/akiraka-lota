@@ -1,9 +1,51 @@
-use std::{collections::HashMap, f32::consts::E};
+use std::collections::HashMap;
 
-use wgpu::{Adapter, Backends, Device, DeviceDescriptor, Features, Instance, InstanceDescriptor, Limits, PowerPreference, Queue, RequestAdapterOptions, Surface, SurfaceConfiguration, SurfaceError, TextureUsages, RenderPipeline, ShaderModuleDescriptor, PipelineLayoutDescriptor, RenderPipelineDescriptor, VertexState, ColorTargetState, BlendState, ColorWrites, FragmentState, PrimitiveState, Face, MultisampleState, RenderPassDescriptor, RenderPassColorAttachment, Operations, LoadOp, TextureFormat, CompositeAlphaMode};
+use bytemuck::{Pod, Zeroable};
+use wgpu::{Buffer, VertexBufferLayout, BufferAddress, VertexAttribute, VertexFormat};
+use wgpu::util::DeviceExt;
+use wgpu::{Adapter, Backends, Device, DeviceDescriptor, Features, Instance, InstanceDescriptor, Limits, PowerPreference, Queue, RequestAdapterOptions, Surface, SurfaceConfiguration, SurfaceError, TextureUsages, RenderPipeline, ShaderModuleDescriptor, PipelineLayoutDescriptor, RenderPipelineDescriptor, VertexState, ColorTargetState, BlendState, ColorWrites, FragmentState, PrimitiveState, Face, MultisampleState, RenderPassDescriptor, RenderPassColorAttachment, Operations, LoadOp, CompositeAlphaMode, util::BufferInitDescriptor, BufferUsages};
 use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
 
 use crate::{Exception, assets::Assets};
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Vertex {
+    pub position: [f32; 3],
+    pub color: [f32; 3],
+    // pub uv: [f32; 3],
+}
+
+impl Vertex {
+    const ATTRIBS: [VertexAttribute; 2] = wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x3];
+
+    pub fn desc<'a>() -> VertexBufferLayout<'a> {
+        // let x = &wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x3];
+        // let y = &[
+        //         VertexAttribute {
+        //             offset: 0,
+        //             shader_location: 0,
+        //             format: VertexFormat::Float32x3,
+        //         },
+        //         VertexAttribute {
+        //             offset: std::mem::size_of::<[f32; 3]>() as wgpu::BufferAddress,
+        //             shader_location: 1,
+        //             format: VertexFormat::Float32x3,
+        //         }
+        //     ];
+        VertexBufferLayout {
+            array_stride: std::mem::size_of::<Vertex>() as BufferAddress,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &Self::ATTRIBS,
+        }
+    }
+}
+
+const VERTICES: &[Vertex] = &[
+    Vertex { position: [0.0, 0.5, 0.0], color: [1.0, 0.0, 0.0] },
+    Vertex { position: [-0.5, -0.5, 0.0], color: [0.0, 1.0, 0.0] },
+    Vertex { position: [0.5, -0.5, 0.0], color: [0.0, 0.0, 1.0] },
+];
 
 // 好哎！
 // https://jinleili.github.io/learn-wgpu-zh/beginner/tutorial2-surface/
@@ -14,6 +56,8 @@ pub struct WGPUInstance {
     pub config: SurfaceConfiguration,
     pub size: PhysicalSize<u32>,
     pub render_pipelines: HashMap<String, RenderPipeline>,
+    pub vertex_buffer: Buffer,
+    pub num_vertices: u32,
 }
 
 impl WGPUInstance {
@@ -103,7 +147,9 @@ impl WGPUInstance {
                 vertex: VertexState {
                     module: &shader,
                     entry_point: "vs_main",
-                    buffers: &[],
+                    buffers: &[
+                        Vertex::desc()
+                    ],
                 },
                 fragment: Some(FragmentState {
                     module: &shader,
@@ -125,8 +171,8 @@ impl WGPUInstance {
                 },
                 depth_stencil: None,
                 multisample: MultisampleState {
-                    count: 1, 
-                    mask: !0, 
+                    count: 1,
+                    mask: !0,
                     alpha_to_coverage_enabled: false,
                 },
                 multiview: None,
@@ -135,13 +181,25 @@ impl WGPUInstance {
         }
         render_pipelines.insert("position_color".into(), position_color(&device, &config).unwrap());
 
-        WGPUInstance {
+        let vertex_buffer = device.create_buffer_init(
+            &BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: bytemuck::cast_slice(VERTICES),
+                usage: BufferUsages::VERTEX,
+            }
+        );
+
+        let num_vertices = VERTICES.len() as u32;
+
+         WGPUInstance {
             surface,
             device,
             queue,
             config,
             size,
             render_pipelines,
+            vertex_buffer,
+            num_vertices,
         }
     }
 
@@ -165,7 +223,6 @@ impl WGPUInstance {
 
     pub fn render(&mut self) -> Result<(), SurfaceError> {
         // TODO: 还是啥也没有 0.o
-        println!("114514");
         let output = self.surface.get_current_texture()?;
         let view = output
             .texture
@@ -200,7 +257,8 @@ impl WGPUInstance {
             });
 
             render_pass.set_pipeline(&self.render_pipelines.get("position_color").unwrap());
-            render_pass.draw(0..3, 0..1);
+            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+            render_pass.draw(0..self.num_vertices, 0..1);
         }
 
         self.queue.submit(Some(encoder.finish()));
