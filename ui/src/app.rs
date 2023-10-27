@@ -85,6 +85,8 @@ pub fn launch() {
                             // TODO: 窗口更新的本地方法
                             // 刷新WGPU实例
                             wgpu_instance.resize(*size);
+                            #[cfg(target_os = "macos")]
+                            window.request_redraw();
                         }
                         WindowEvent::ScaleFactorChanged { .. } => {
                             let size = window.inner_size();
