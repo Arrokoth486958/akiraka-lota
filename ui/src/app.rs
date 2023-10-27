@@ -24,7 +24,7 @@ pub fn launch() {
     // TODO: 一些特定平台的函数
     #[cfg(target_os = "macos")]
     {
-        use crate::{platform::macos::apply_empty_tool_bar, wgpu::WGPUInstance};
+        // use crate::{platform::macos::apply_empty_tool_bar, wgpu::WGPUInstance};
         use winit::platform::macos::WindowBuilderExtMacOS;
 
         window_builder = window_builder

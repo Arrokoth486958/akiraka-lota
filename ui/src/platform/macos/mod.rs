@@ -1,5 +1,4 @@
 use raw_window_handle::HasRawWindowHandle;
-use window_vibrancy::NSVisualEffectMaterial;
 use winit::window::Window;
 
 use crate::Exception;
@@ -33,8 +32,8 @@ pub fn apply_empty_tool_bar(window: &Window) -> Result<(), Exception> {
                 NSWindow::center(ns_window);
 
                 // 设置可以拖动窗口
-                NSWindow::setMovableByWindowBackground_(ns_window, NO);
-                NSWindow::setMovable_(ns_window, NO);
+                // NSWindow::setMovableByWindowBackground_(ns_window, NO);
+                // NSWindow::setMovable_(ns_window, NO);
 
                 // 标题栏或者说是工具栏
                 let ns_toolbar = msg_send![class!(NSToolbar), new];
