@@ -49,30 +49,27 @@ const INDICES: &[u16] = &[
     0, 2, 3,
 ];
 
-// pub struct RenderObject {
-//     vertex: Vec<Vertex>,
-//     indices: Vec<u16>,
-//     // vertex_buffer: Buffer,
-// }
+pub struct RenderObject {
+    vertex: &'static[Vertex],
+    indices: &'static[u16],
+    vertex_buffer: Buffer,
+}
 
-// impl  RenderObject {
-//     pub fn new(vertex: Vec<Vertex>, indices: Vec<u16>, device: &Device) -> RenderObject {
-//         for i in vertex {
-//             vertex_array[]
-//         }
-//         let vertex_buffer = device.create_buffer_init(&BufferInitDescriptor {
-//             label: Some("Vertex Buffer"),
-//             usage: BufferUsages::VERTEX,
-//             contents: bytemuck::cast_slice(vertex.into()),
-//         });
+impl  RenderObject {
+    pub fn new(vertex: &'static[Vertex], indices: &'static[u16], device: &Device) -> RenderObject {
+        let vertex_buffer = device.create_buffer_init(&BufferInitDescriptor {
+            label: Some("Vertex Buffer"),
+            usage: BufferUsages::VERTEX,
+            contents: bytemuck::cast_slice(vertex),
+        });
             
-//         RenderObject {
-//             vertex,
-//             indices,
-//             vertex_buffer,
-//         }
-//     }
-// }
+        RenderObject {
+            vertex,
+            indices,
+            vertex_buffer,
+        }
+    }
+}
 
 // 好哎！
 // https://jinleili.github.io/learn-wgpu-zh/beginner/tutorial2-surface/

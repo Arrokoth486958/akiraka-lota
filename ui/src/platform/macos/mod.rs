@@ -24,7 +24,7 @@ pub fn apply_empty_tool_bar(window: &Window) -> Result<(), Exception> {
             extern crate objc;
             use cocoa::appkit::NSWindow;
             use cocoa::base::id;
-            use objc::{class, msg_send, runtime::NO, sel, sel_impl};
+            use objc::{class, msg_send, sel, sel_impl};
 
             let ns_window = handle.ns_window as id;
             unsafe {
