@@ -29,5 +29,6 @@ var s_diffuse: sampler;
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4f {
-    return textureSample(t_diffuse, s_diffuse, in.tex_coords);
+    var color = textureSample(t_diffuse, s_diffuse, vec2f(in.tex_coords.x, 1.0 - in.tex_coords.y));
+    return color;
 }

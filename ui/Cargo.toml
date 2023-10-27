@@ -21,7 +21,7 @@ features = ["png", "jpeg"]
 
 [dependencies.wgpu]
 version = "0.17"
-features = ["default"]
+features = ["default", "glsl"]
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc = "0.2"
