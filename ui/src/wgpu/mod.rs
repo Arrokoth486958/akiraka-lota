@@ -38,7 +38,6 @@ impl Vertex {
 }
 
 const VERTICES: &[Vertex] = &[
-<<<<<<< HEAD
     Vertex { position: [-0.0868241, 0.49240386, 0.0], color: [0.5, 0.0, 0.5] }, // A
     Vertex { position: [-0.49513406, 0.06958647, 0.0], color: [0.5, 0.0, 0.5] }, // B
     Vertex { position: [-0.21918549, -0.44939706, 0.0], color: [0.5, 0.0, 0.5] }, // C
@@ -50,23 +49,6 @@ const INDICES: &[u16] = &[
     0, 1, 4,
     1, 2, 4,
     2, 3, 4,
-=======
-    Vertex {
-        position: [0.0, 0.5, 0.0],
-        color: [1.0, 0.0, 0.0],
-        uv: [0.0, 0.0, 0.0],
-    },
-    Vertex {
-        position: [-0.5, -0.5, 0.0],
-        color: [0.0, 1.0, 0.0],
-        uv: [0.0, 0.0, 0.0],
-    },
-    Vertex {
-        position: [0.5, -0.5, 0.0],
-        color: [0.0, 0.0, 1.0],
-        uv: [0.0, 0.0, 0.0],
-    },
->>>>>>> 476e2f3eb194ede9646812447b04948e4266dcbf
 ];
 
 pub struct RenderObject {
@@ -104,13 +86,9 @@ pub struct WGPUInstance {
     pub size: PhysicalSize<u32>,
     pub render_pipelines: HashMap<String, RenderPipeline>,
     pub vertex_buffer: Buffer,
-<<<<<<< HEAD
     pub index_buffer: Buffer,
     pub num_indices: u32,
-=======
-    pub num_vertices: u32,
-    pub render_objects: Vec<RenderObject>
->>>>>>> 476e2f3eb194ede9646812447b04948e4266dcbf
+    // pub render_objects: Vec<RenderObject>,
 }
 
 impl WGPUInstance {
@@ -241,6 +219,15 @@ impl WGPUInstance {
             "position_color".into(),
             position_color(&device, &config).unwrap(),
         );
+
+        let vertex_buffer = device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("Vertex Buffer"),
+                contents: bytemuck::cast_slice(VERTICES),
+                usage: wgpu::BufferUsages::VERTEX,
+            }
+        );
+
         let index_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Index Buffer"),
@@ -249,19 +236,9 @@ impl WGPUInstance {
             }
         );  
 
-<<<<<<< HEAD
         let num_indices = INDICES.len() as u32;
-=======
-        let vertex_buffer = device.create_buffer_init(&BufferInitDescriptor {
-            label: Some("Vertex Buffer"),
-            contents: bytemuck::cast_slice(VERTICES),
-            usage: BufferUsages::VERTEX,
-        });
 
-        let num_vertices = VERTICES.len() as u32;
->>>>>>> 476e2f3eb194ede9646812447b04948e4266dcbf
-
-        let render_objects = Vec::new();
+        // let render_objects = Vec::new();
 
         WGPUInstance {
             surface,
@@ -271,13 +248,9 @@ impl WGPUInstance {
             size,
             render_pipelines,
             vertex_buffer,
-<<<<<<< HEAD
             index_buffer,
             num_indices,
-=======
-            num_vertices,
-            render_objects,
->>>>>>> 476e2f3eb194ede9646812447b04948e4266dcbf
+            // render_objects,
         }
     }
 
@@ -329,21 +302,6 @@ impl WGPUInstance {
                 })],
                 depth_stencil_attachment: None,
             });
-<<<<<<< HEAD
-=======
-
-            // for render_object in &self.render_objects {
-            //     let vertex_buffer = self.device.create_buffer_init(&BufferInitDescriptor {
-            //         label: Some("Vertex Buffer {}"),
-            //         contents: bytemuck::cast_slice(VERTICES),
-            //         usage: BufferUsages::VERTEX,
-            //     });
-            //     render_pass.set_pipeline(&self.render_pipelines.get("position_color").unwrap());
-            //     render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
-            //     render_pass.draw(0..render_object.vertex.len() as u32, 0..1);
-            // }
-
->>>>>>> 476e2f3eb194ede9646812447b04948e4266dcbf
             render_pass.set_pipeline(&self.render_pipelines.get("position_color").unwrap());
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
             render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16); // 1.
