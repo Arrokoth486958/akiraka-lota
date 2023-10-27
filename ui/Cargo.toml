@@ -14,6 +14,11 @@ pollster = "0.3.0"
 rust-embed = "6.0"
 bytemuck = { version = "1.14", features = [ "derive" ] }
 
+[dependencies.image]
+version = "0.24"
+default-features = true
+features = ["png", "jpeg"]
+
 [dependencies.wgpu]
 version = "0.17"
 features = ["default"]
