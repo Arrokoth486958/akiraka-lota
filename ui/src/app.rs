@@ -2,7 +2,7 @@ use wgpu::SurfaceError;
 use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
-    event_loop::EventLoop,
+    event_loop::{EventLoop, ControlFlow},
     window::{WindowBuilder, WindowButtons},
 };
 
@@ -68,6 +68,7 @@ pub fn launch() {
     let mut wgpu_instance = WGPUInstance::new(&window);
 
     window.set_visible(true);
+    // event_loop.set_control_flow(ControlFlow::Wait);
     event_loop
         .run(move |event, elwt| match event {
             Event::WindowEvent {
@@ -106,6 +107,7 @@ pub fn launch() {
                                 Err(SurfaceError::OutOfMemory) => elwt.exit(),
                                 Err(e) => eprintln!("{}", e),
                             }
+                            // window.request_redraw();
                             // if window_id == window.id() {
                             //     gl_state.update();
                             //     // 渲染并处理错误

@@ -52,21 +52,19 @@ const INDICES: &[u16] = &[
 pub struct RenderObject {
     vertex: &'static[Vertex],
     indices: &'static[u16],
-    vertex_buffer: Buffer,
 }
 
 impl  RenderObject {
-    pub fn new(vertex: &'static[Vertex], indices: &'static[u16], device: &Device) -> RenderObject {
-        let vertex_buffer = device.create_buffer_init(&BufferInitDescriptor {
-            label: Some("Vertex Buffer"),
-            usage: BufferUsages::VERTEX,
-            contents: bytemuck::cast_slice(vertex),
-        });
+    pub fn new(vertex: &'static[Vertex], indices: &'static[u16]) -> RenderObject {
+        // let vertex_buffer = device.create_buffer_init(&BufferInitDescriptor {
+        //     label: Some("Vertex Buffer"),
+        //     usage: BufferUsages::VERTEX,
+        //     contents: bytemuck::cast_slice(vertex),
+        // });
             
         RenderObject {
             vertex,
             indices,
-            vertex_buffer,
         }
     }
 }
@@ -84,10 +82,14 @@ pub struct WGPUInstance {
     pub index_buffer: Buffer,
     pub num_indices: u32,
     pub diffuse_bind_group: BindGroup,
-    // pub render_objects: Vec<RenderObject>,
+    pub render_objects: Vec<RenderObject>,
 }
 
+static mut VERTEX_BUFFERS: Vec<Buffer> = Vec::new();
+static mut INDEX_BUFFERS: Vec<Buffer> = Vec::new();
+
 impl WGPUInstance {
+
     pub fn new(window: &Window) -> Self {
         println!("Scalefactor: {:?}", window.scale_factor());
         let size = window.inner_size();
@@ -420,7 +422,20 @@ impl WGPUInstance {
 
         let num_indices = INDICES.len() as u32;
 
-        // let render_objects = Vec::new();
+        let mut render_objects = Vec::new();
+
+        // TODO: 测试
+        render_objects.push(RenderObject::new(
+            &[
+                Vertex { position: [-1.0, -1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 0.0], },
+                Vertex { position: [1.0, -1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 0.0], },
+                Vertex { position: [1.0, 1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 1.0], },
+                Vertex { position: [-1.0, 1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 1.0], },
+            ],
+            &[
+                0, 1, 2,
+                0, 2, 3,
+        ]));
 
         WGPUInstance {
             surface,
@@ -433,7 +448,7 @@ impl WGPUInstance {
             index_buffer,
             num_indices,
             diffuse_bind_group,
-            // render_objects,
+            render_objects,
         }
     }
 
@@ -486,11 +501,59 @@ impl WGPUInstance {
                 depth_stencil_attachment: None,
             });
             // render_pass.set_pipeline(&self.render_pipelines.get("position_color").unwrap());
-            render_pass.set_pipeline(&self.render_pipelines.get("position_texture").unwrap());
-            render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
-            render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16); // 1.
-            render_pass.draw_indexed(0..self.num_indices, 0, 0..1); // 2.
+
+            // render_pass.set_pipeline(&self.render_pipelines.get("position_texture").unwrap());
+            // render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
+            // render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
+            // render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16); // 1.
+            // render_pass.draw_indexed(0..self.num_indices, 0, 0..1); // 2.
+
+            // 清除上一循环的缓冲
+            unsafe {
+                println!("{:?} : {:?}", VERTEX_BUFFERS.len(), INDEX_BUFFERS.len());
+                for buffer in &VERTEX_BUFFERS {
+                    buffer.destroy();
+                }
+                VERTEX_BUFFERS.clear();
+
+                for buffer in &INDEX_BUFFERS {
+                    buffer.destroy();
+                }
+                INDEX_BUFFERS.clear();
+            }
+
+            // 然后渲染这一循环
+            for (i, obj) in self.render_objects.iter().enumerate() {
+                println!("{:?}", i);
+
+                // 因为涉及到全局变量所以需要unsafe
+                unsafe {
+                    let vertex_buffer = self.device.create_buffer_init(
+                        &wgpu::util::BufferInitDescriptor {
+                            label: Some(format!("Vertex Buffer: {}", i).as_str()),
+                            contents: bytemuck::cast_slice(obj.vertex),
+                            usage: wgpu::BufferUsages::VERTEX,
+                        }
+                    );
+
+                    let index_buffer = self.device.create_buffer_init(
+                        &wgpu::util::BufferInitDescriptor {
+                            label: Some(format!("Index Buffer: {}", i).as_str()),
+                            contents: bytemuck::cast_slice(INDICES),
+                            usage: wgpu::BufferUsages::INDEX,
+                        }
+                    );
+                    // 所有权转移
+                    VERTEX_BUFFERS.push(vertex_buffer);
+                    INDEX_BUFFERS.push(index_buffer);
+                    
+                    render_pass.set_pipeline(&self.render_pipelines.get("position_texture").unwrap());
+                    render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
+                    render_pass.set_vertex_buffer(0, VERTEX_BUFFERS.last().unwrap().slice(..));
+                    render_pass.set_index_buffer(INDEX_BUFFERS.last().unwrap().slice(..), wgpu::IndexFormat::Uint16); // 1.
+                    render_pass.draw_indexed(0..self.num_indices, 0, 0..1); // 2.
+                }
+            }
         }
 
         self.queue.submit(Some(encoder.finish()));
