@@ -1,12 +1,20 @@
 use std::collections::HashMap;
 
 use bytemuck::{Pod, Zeroable};
-use wgpu::{Buffer, VertexBufferLayout, BufferAddress, VertexAttribute, VertexFormat};
 use wgpu::util::DeviceExt;
-use wgpu::{Adapter, Backends, Device, DeviceDescriptor, Features, Instance, InstanceDescriptor, Limits, PowerPreference, Queue, RequestAdapterOptions, Surface, SurfaceConfiguration, SurfaceError, TextureUsages, RenderPipeline, ShaderModuleDescriptor, PipelineLayoutDescriptor, RenderPipelineDescriptor, VertexState, ColorTargetState, BlendState, ColorWrites, FragmentState, PrimitiveState, Face, MultisampleState, RenderPassDescriptor, RenderPassColorAttachment, Operations, LoadOp, CompositeAlphaMode, util::BufferInitDescriptor, BufferUsages};
+use wgpu::{
+    util::BufferInitDescriptor, Adapter, Backends, BlendState, BufferUsages, ColorTargetState,
+    ColorWrites, CompositeAlphaMode, Device, DeviceDescriptor, Face, Features, FragmentState,
+    Instance, InstanceDescriptor, Limits, LoadOp, MultisampleState, Operations,
+    PipelineLayoutDescriptor, PowerPreference, PrimitiveState, Queue, RenderPassColorAttachment,
+    RenderPassDescriptor, RenderPipeline, RenderPipelineDescriptor, RequestAdapterOptions,
+    ShaderModuleDescriptor, Surface, SurfaceConfiguration, SurfaceError, TextureUsages,
+    VertexState,
+};
+use wgpu::{Buffer, BufferAddress, VertexAttribute, VertexBufferLayout};
 use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
 
-use crate::{Exception, assets::Assets};
+use crate::{assets::Assets, Exception};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -17,7 +25,8 @@ pub struct Vertex {
 }
 
 impl Vertex {
-    const ATTRIBS: [VertexAttribute; 3] = wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x3, 2 => Float32x3];
+    const ATTRIBS: [VertexAttribute; 3] =
+        wgpu::vertex_attr_array![0 => Float32x3, 1 => Float32x3, 2 => Float32x3];
 
     pub fn desc<'a>() -> VertexBufferLayout<'a> {
         VertexBufferLayout {
@@ -29,10 +38,47 @@ impl Vertex {
 }
 
 const VERTICES: &[Vertex] = &[
-    Vertex { position: [0.0, 0.5, 0.0], color: [1.0, 0.0, 0.0], uv: [0.0, 0.0, 0.0], },
-    Vertex { position: [-0.5, -0.5, 0.0], color: [0.0, 1.0, 0.0], uv: [0.0, 0.0, 0.0], },
-    Vertex { position: [0.5, -0.5, 0.0], color: [0.0, 0.0, 1.0], uv: [0.0, 0.0, 0.0], },
+    Vertex {
+        position: [0.0, 0.5, 0.0],
+        color: [1.0, 0.0, 0.0],
+        uv: [0.0, 0.0, 0.0],
+    },
+    Vertex {
+        position: [-0.5, -0.5, 0.0],
+        color: [0.0, 1.0, 0.0],
+        uv: [0.0, 0.0, 0.0],
+    },
+    Vertex {
+        position: [0.5, -0.5, 0.0],
+        color: [0.0, 0.0, 1.0],
+        uv: [0.0, 0.0, 0.0],
+    },
 ];
+
+pub struct RenderObject {
+    vertex: Vec<Vertex>,
+    indices: Vec<u16>,
+    // vertex_buffer: Buffer,
+}
+
+// impl  RenderObject {
+//     pub fn new(vertex: Vec<Vertex>, indices: Vec<u16>, device: &Device) -> RenderObject {
+//         for i in vertex {
+//             vertex_array[]
+//         }
+//         let vertex_buffer = device.create_buffer_init(&BufferInitDescriptor {
+//             label: Some("Vertex Buffer"),
+//             usage: BufferUsages::VERTEX,
+//             contents: bytemuck::cast_slice(vertex.into()),
+//         });
+            
+//         RenderObject {
+//             vertex,
+//             indices,
+//             vertex_buffer,
+//         }
+//     }
+// }
 
 // 好哎！
 // https://jinleili.github.io/learn-wgpu-zh/beginner/tutorial2-surface/
@@ -45,6 +91,7 @@ pub struct WGPUInstance {
     pub render_pipelines: HashMap<String, RenderPipeline>,
     pub vertex_buffer: Buffer,
     pub num_vertices: u32,
+    pub render_objects: Vec<RenderObject>
 }
 
 impl WGPUInstance {
@@ -95,7 +142,10 @@ impl WGPUInstance {
         let caps = surface.get_capabilities(&adapter);
 
         // println!("{:?}", caps.alpha_modes);
-        let alpha_channel = if caps.alpha_modes.contains(&CompositeAlphaMode::PostMultiplied) {
+        let alpha_channel = if caps
+            .alpha_modes
+            .contains(&CompositeAlphaMode::PostMultiplied)
+        {
             CompositeAlphaMode::PostMultiplied
         } else {
             caps.alpha_modes[0]
@@ -115,9 +165,13 @@ impl WGPUInstance {
 
         let mut render_pipelines = HashMap::new();
 
-        fn position_color(device: &Device, config: &SurfaceConfiguration) -> Result<RenderPipeline, Exception> {
+        fn position_color(
+            device: &Device,
+            config: &SurfaceConfiguration,
+        ) -> Result<RenderPipeline, Exception> {
             let shader_path: String = "position_color".into();
-            let binding = Assets::get((format!("shaders/{}.wgsl", shader_path.clone())).as_str()).unwrap();
+            let binding =
+                Assets::get((format!("shaders/{}.wgsl", shader_path.clone())).as_str()).unwrap();
             let src = std::str::from_utf8(&binding.data).unwrap();
             let shader = device.create_shader_module(ShaderModuleDescriptor {
                 label: Some(shader_path.as_str()),
@@ -134,9 +188,7 @@ impl WGPUInstance {
                 vertex: VertexState {
                     module: &shader,
                     entry_point: "vs_main",
-                    buffers: &[
-                        Vertex::desc()
-                    ],
+                    buffers: &[Vertex::desc()],
                 },
                 fragment: Some(FragmentState {
                     module: &shader,
@@ -166,19 +218,22 @@ impl WGPUInstance {
             });
             Ok(pipeline)
         }
-        render_pipelines.insert("position_color".into(), position_color(&device, &config).unwrap());
-
-        let vertex_buffer = device.create_buffer_init(
-            &BufferInitDescriptor {
-                label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(VERTICES),
-                usage: BufferUsages::VERTEX,
-            }
+        render_pipelines.insert(
+            "position_color".into(),
+            position_color(&device, &config).unwrap(),
         );
+
+        let vertex_buffer = device.create_buffer_init(&BufferInitDescriptor {
+            label: Some("Vertex Buffer"),
+            contents: bytemuck::cast_slice(VERTICES),
+            usage: BufferUsages::VERTEX,
+        });
 
         let num_vertices = VERTICES.len() as u32;
 
-         WGPUInstance {
+        let render_objects = Vec::new();
+
+        WGPUInstance {
             surface,
             device,
             queue,
@@ -187,6 +242,7 @@ impl WGPUInstance {
             render_pipelines,
             vertex_buffer,
             num_vertices,
+            render_objects,
         }
     }
 
@@ -219,29 +275,36 @@ impl WGPUInstance {
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
             });
-        
+
         {
             let mut render_pass = encoder.begin_render_pass(&RenderPassDescriptor {
                 label: Some("Main Render Pass"),
-                color_attachments: &[
-                    Some(RenderPassColorAttachment {
-                        view: &view,
-                        resolve_target: None,
-                        ops: Operations {
-                            load: LoadOp::Clear(
-                                wgpu::Color {
-                                    r: 0.0,
-                                    g: 0.0,
-                                    b: 0.0,
-                                    a: 0.0
-                                }
-                            ),
-                            store: true,
-                        }
-                    })
-                ],
+                color_attachments: &[Some(RenderPassColorAttachment {
+                    view: &view,
+                    resolve_target: None,
+                    ops: Operations {
+                        load: LoadOp::Clear(wgpu::Color {
+                            r: 0.0,
+                            g: 0.0,
+                            b: 0.0,
+                            a: 0.0,
+                        }),
+                        store: true,
+                    },
+                })],
                 depth_stencil_attachment: None,
             });
+
+            // for render_object in &self.render_objects {
+            //     let vertex_buffer = self.device.create_buffer_init(&BufferInitDescriptor {
+            //         label: Some("Vertex Buffer {}"),
+            //         contents: bytemuck::cast_slice(VERTICES),
+            //         usage: BufferUsages::VERTEX,
+            //     });
+            //     render_pass.set_pipeline(&self.render_pipelines.get("position_color").unwrap());
+            //     render_pass.set_vertex_buffer(0, vertex_buffer.slice(..));
+            //     render_pass.draw(0..render_object.vertex.len() as u32, 0..1);
+            // }
 
             render_pass.set_pipeline(&self.render_pipelines.get("position_color").unwrap());
             render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));

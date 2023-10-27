@@ -23,8 +23,8 @@ pub fn launch() {
     // TODO: 一些特定平台的函数
     #[cfg(target_os = "macos")]
     {
-        use winit::platform::macos::WindowBuilderExtMacOS;
         use crate::{platform::macos::apply_empty_tool_bar, wgpu::WGPUInstance};
+        use winit::platform::macos::WindowBuilderExtMacOS;
 
         window_builder = window_builder
             .with_titlebar_transparent(true)
@@ -40,10 +40,8 @@ pub fn launch() {
             // .with_decorations(false)
             .with_transparent(true);
     }
-    
-    let window = window_builder
-        .build(&event_loop)
-        .unwrap();
+
+    let window = window_builder.build(&event_loop).unwrap();
 
     // let monitor_size = window.current_monitor().unwrap().size();
     // let window_size = window.inner_size();
@@ -53,7 +51,8 @@ pub fn launch() {
     // TODO: 还是一些特定平台的函数
     #[cfg(target_os = "macos")]
     {
-        crate::platform::macos::init_window(&window).expect("Could not configure custom Window Settings for macOS!");
+        crate::platform::macos::init_window(&window)
+            .expect("Could not configure custom Window Settings for macOS!");
     }
     #[cfg(target_os = "windows")]
     {
@@ -86,24 +85,20 @@ pub fn launch() {
                             // 刷新WGPU实例
                             wgpu_instance.resize(*size);
                         }
-                        WindowEvent::ScaleFactorChanged {
-                            ..
-                        } => {
+                        WindowEvent::ScaleFactorChanged { .. } => {
                             let size = window.inner_size();
                             // 或许有更好的解决方案
                             println!("{:?}", size);
                             wgpu_instance.resize(size);
                         }
-                        WindowEvent::KeyboardInput { 
-                            ..
-                        } => {
+                        WindowEvent::KeyboardInput { .. } => {
                             wgpu_instance.input(event);
                             wgpu_instance.update();
                         }
                         WindowEvent::RedrawRequested => {
                             wgpu_instance.update();
                             match wgpu_instance.render() {
-                                Ok(()) => {},
+                                Ok(()) => {}
                                 Err(SurfaceError::Lost) => wgpu_instance.resize(wgpu_instance.size),
                                 Err(SurfaceError::OutOfMemory) => elwt.exit(),
                                 Err(e) => eprintln!("{}", e),
