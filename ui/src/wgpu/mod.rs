@@ -63,7 +63,7 @@ impl WGPUInstance {
             instance
                 .request_adapter(&RequestAdapterOptions {
                     compatible_surface: Some(surface),
-                    power_preference: PowerPreference::HighPerformance,
+                    power_preference: PowerPreference::default(),
                     // TODO: 设置强制使用CPU渲染
                     force_fallback_adapter: false,
                 })
