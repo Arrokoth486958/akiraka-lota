@@ -51,11 +51,11 @@ const INDICES: &[u16] = &[
     2, 3, 4,
 ];
 
-pub struct RenderObject {
-    vertex: Vec<Vertex>,
-    indices: Vec<u16>,
-    // vertex_buffer: Buffer,
-}
+// pub struct RenderObject {
+//     vertex: Vec<Vertex>,
+//     indices: Vec<u16>,
+//     // vertex_buffer: Buffer,
+// }
 
 // impl  RenderObject {
 //     pub fn new(vertex: Vec<Vertex>, indices: Vec<u16>, device: &Device) -> RenderObject {
@@ -109,7 +109,8 @@ impl WGPUInstance {
                 .request_adapter(&RequestAdapterOptions {
                     compatible_surface: Some(surface),
                     power_preference: PowerPreference::default(),
-                    // TODO: 设置强制使用CPU渲染
+                    // 强制使用软件渲染，但是有些设备上用不了
+                    // 而且会占用大量内存
                     force_fallback_adapter: false,
                 })
                 .await

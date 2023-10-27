@@ -18,6 +18,7 @@ pub fn launch() {
         .with_enabled_buttons(WindowButtons::CLOSE | WindowButtons::MINIMIZE)
         .with_inner_size(LogicalSize::new(600, 400))
         .with_min_inner_size(LogicalSize::new(600, 400))
+        .with_title("Akiraka - Lota")
         .with_visible(false);
 
     // TODO: 一些特定平台的函数
