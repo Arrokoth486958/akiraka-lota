@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use bytemuck::{Pod, Zeroable};
 use wgpu::util::DeviceExt;
 use wgpu::{
-    util::BufferInitDescriptor, Adapter, Backends, BlendState, BufferUsages, ColorTargetState,
+    Adapter, Backends, BlendState, ColorTargetState,
     ColorWrites, CompositeAlphaMode, Device, DeviceDescriptor, Face, Features, FragmentState,
     Instance, InstanceDescriptor, Limits, LoadOp, MultisampleState, Operations,
     PipelineLayoutDescriptor, PowerPreference, PrimitiveState, Queue, RenderPassColorAttachment,
