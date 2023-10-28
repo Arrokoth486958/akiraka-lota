@@ -166,7 +166,6 @@ impl WGPUInstance {
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
-            // alpha_mode: caps.alpha_modes[0],
             alpha_mode: alpha_channel,
             view_formats: vec![],
         };
