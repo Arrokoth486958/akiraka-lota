@@ -4,7 +4,7 @@ use wgpu::SurfaceError;
 use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
-    event_loop::EventLoop,
+    event_loop::{EventLoop, ControlFlow},
     window::{WindowBuilder, WindowButtons},
 };
 
@@ -75,7 +75,7 @@ pub fn launch() {
     let mut wgpu_instance = WGPUInstance::new(&window);
 
     window.set_visible(true);
-    // event_loop.set_control_flow(ControlFlow::Wait);
+    event_loop.set_control_flow(ControlFlow::Poll);
     let start_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
     event_loop
         .run(move |event, elwt| match event {
@@ -123,6 +123,7 @@ pub fn launch() {
                                     0, 1, 2,
                                     0, 2, 3,
                             ]));
+                            
                             wgpu_instance.update();
                             match wgpu_instance.render() {
                                 Ok(()) => {}
@@ -132,7 +133,7 @@ pub fn launch() {
                             }
 
                             if !window.is_minimized().unwrap() && window.is_visible().unwrap() {
-                                window.request_redraw();
+                                // window.request_redraw();
                             }
                             // if window_id == window.id() {
                             //     gl_state.update();
