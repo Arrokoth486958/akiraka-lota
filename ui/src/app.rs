@@ -8,7 +8,7 @@ use winit::{
     window::{WindowBuilder, WindowButtons},
 };
 
-use crate::wgpu::{RenderObject, Vertex, WGPUInstance};
+use crate::{wgpu::{WGPUInstance, RenderObject, Vertex, cache}, util};
 
 // struct LauncherState {
 //     // TODO: 用来传递应用启动参数
@@ -65,16 +65,8 @@ pub fn launch() {
     let mut wgpu_instance = WGPUInstance::new(&window);
 
     window.set_visible(true);
-<<<<<<< HEAD
     event_loop.set_control_flow(ControlFlow::Poll);
     let start_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
-=======
-    // event_loop.set_control_flow(ControlFlow::Wait);
-    let start_time = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_millis();
->>>>>>> 9e28db5a41c62e7b4bec1ab3629c9f974f7373dc
     event_loop
         .run(move |event, elwt| match event {
             Event::WindowEvent {
@@ -107,51 +99,25 @@ pub fn launch() {
                         }
                         WindowEvent::RedrawRequested => {
                             // TODO: Debug
-                            let x = SystemTime::now()
-                                .duration_since(UNIX_EPOCH)
-                                .unwrap()
-                                .as_millis()
-                                - start_time;
+                            let x = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() - start_time;
                             let x: f32 = (x as f32 / 10000.0).to_degrees().sin();
+                            // println!("{:?}", x);
                             wgpu_instance.render_objects.push(RenderObject::new(
                                 vec![
-                                    Vertex {
-                                        position: [-1.0 * x, -1.0 * x, 0.0],
-                                        color: [0.0, 0.0, 0.0],
-                                        tex_coords: [0.0, 0.0],
-                                    },
-                                    Vertex {
-                                        position: [1.0 * x, -1.0 * x, 0.0],
-                                        color: [0.0, 0.0, 0.0],
-                                        tex_coords: [1.0, 0.0],
-                                    },
-                                    Vertex {
-                                        position: [1.0 * x, 1.0 * x, 0.0],
-                                        color: [0.0, 0.0, 0.0],
-                                        tex_coords: [1.0, 1.0],
-                                    },
-                                    Vertex {
-                                        position: [-1.0 * x, 1.0 * x, 0.0],
-                                        color: [0.0, 0.0, 0.0],
-                                        tex_coords: [0.0, 1.0],
-                                    },
+                                    Vertex { position: [-1.0 * x, -1.0 * x, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 0.0], },
+                                    Vertex { position: [1.0 * x, -1.0 * x, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 0.0], },
+                                    Vertex { position: [1.0 * x, 1.0 * x, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 1.0], },
+                                    Vertex { position: [-1.0 * x, 1.0 * x, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 1.0], },
                                 ],
-<<<<<<< HEAD
                                 vec![
                                     0, 1, 2,
                                     0, 2, 3,
                             ]));
                             
-=======
-                                vec![0, 1, 2, 0, 2, 3],
-                            ));
->>>>>>> 9e28db5a41c62e7b4bec1ab3629c9f974f7373dc
                             wgpu_instance.update();
                             match wgpu_instance.render() {
                                 Ok(()) => {}
-                                Err(SurfaceError::Lost) => {
-                                    wgpu_instance.resize(&window, wgpu_instance.size)
-                                }
+                                Err(SurfaceError::Lost) => wgpu_instance.resize(&window, wgpu_instance.size),
                                 Err(SurfaceError::OutOfMemory) => elwt.exit(),
                                 Err(e) => eprintln!("{}", e),
                             }

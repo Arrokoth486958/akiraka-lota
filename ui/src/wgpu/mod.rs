@@ -44,31 +44,6 @@ impl Vertex {
     }
 }
 
-const VERTICES: &[Vertex] = &[
-    Vertex {
-        position: [-1.0, -1.0, 0.0],
-        color: [0.0, 0.0, 0.0],
-        tex_coords: [0.0, 0.0],
-    },
-    Vertex {
-        position: [1.0, -1.0, 0.0],
-        color: [0.0, 0.0, 0.0],
-        tex_coords: [1.0, 0.0],
-    },
-    Vertex {
-        position: [1.0, 1.0, 0.0],
-        color: [0.0, 0.0, 0.0],
-        tex_coords: [1.0, 1.0],
-    },
-    Vertex {
-        position: [-1.0, 1.0, 0.0],
-        color: [0.0, 0.0, 0.0],
-        tex_coords: [0.0, 1.0],
-    },
-];
-
-const INDICES: &[u16] = &[0, 1, 2, 0, 2, 3];
-
 pub struct RenderObject {
     vertex_location: usize,
     index_location: usize,
@@ -93,9 +68,6 @@ pub struct WGPUInstance {
     pub config: SurfaceConfiguration,
     pub size: PhysicalSize<u32>,
     pub render_pipelines: HashMap<String, RenderPipeline>,
-    pub vertex_buffer: Buffer,
-    pub index_buffer: Buffer,
-    pub num_indices: u32,
     pub diffuse_bind_group: BindGroup,
     pub render_objects: Vec<RenderObject>,
 }
@@ -412,20 +384,6 @@ impl WGPUInstance {
             position_texture(&device, &config, texture_bind_group_layout).unwrap(),
         );
 
-        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Vertex Buffer"),
-            contents: bytemuck::cast_slice(VERTICES),
-            usage: wgpu::BufferUsages::VERTEX,
-        });
-
-        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("Index Buffer"),
-            contents: bytemuck::cast_slice(INDICES),
-            usage: wgpu::BufferUsages::INDEX,
-        });
-
-        let num_indices = INDICES.len() as u32;
-
         let render_objects = Vec::new();
 
         WGPUInstance {
@@ -436,9 +394,6 @@ impl WGPUInstance {
             config,
             size,
             render_pipelines,
-            vertex_buffer,
-            index_buffer,
-            num_indices,
             diffuse_bind_group,
             render_objects,
         }
@@ -450,7 +405,6 @@ impl WGPUInstance {
             self.config.width = self.size.width;
             self.config.height = self.size.height;
             self.config.present_mode = PresentMode::AutoVsync;
-            // self.surface.get_current_texture().unwrap().texture.destroy();
             self.surface.configure(&self.device, &self.config);
         }
     }
@@ -465,7 +419,7 @@ impl WGPUInstance {
     }
 
     pub fn render(&mut self) -> Result<(), SurfaceError> {
-        // TODO: 啥也不是 o.0
+        // 啥也不是 o.0
         let output = self.surface.get_current_texture()?;
         let view = output
             .texture
@@ -494,13 +448,6 @@ impl WGPUInstance {
                 })],
                 depth_stencil_attachment: None,
             });
-            // render_pass.set_pipeline(&self.render_pipelines.get("position_color").unwrap());
-
-            // render_pass.set_pipeline(&self.render_pipelines.get("position_texture").unwrap());
-            // render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
-            // render_pass.set_vertex_buffer(0, self.vertex_buffer.slice(..));
-            // render_pass.set_index_buffer(self.index_buffer.slice(..), wgpu::IndexFormat::Uint16); // 1.
-            // render_pass.draw_indexed(0..self.num_indices, 0, 0..1); // 2.
 
             // 清除上一循环的缓冲
             unsafe {
@@ -516,11 +463,7 @@ impl WGPUInstance {
             }
 
             // 然后渲染这一循环
-            // println!("{:?}", self.render_objects);
             for (i, obj) in self.render_objects.iter().enumerate() {
-                // println!("{:?}", i);
-                // println!("{:?}", obj.vertex);
-
                 // 因为涉及到全局变量所以需要unsafe
                 unsafe {
                     let vertex_buffer =
@@ -538,7 +481,6 @@ impl WGPUInstance {
                         self.device
                             .create_buffer_init(&wgpu::util::BufferInitDescriptor {
                                 label: Some(format!("Index Buffer: {}", i).as_str()),
-                                // contents: bytemuck::cast_slice(obj.indices),
                                 contents: bytemuck::cast_slice(cache::get_index(
                                     obj.index_location,
                                 )),
@@ -555,8 +497,8 @@ impl WGPUInstance {
                     render_pass.set_index_buffer(
                         INDEX_BUFFERS.last().unwrap().slice(..),
                         wgpu::IndexFormat::Uint16,
-                    ); // 1.
-                    render_pass.draw_indexed(0..self.num_indices, 0, 0..1); // 2.
+                    );
+                    render_pass.draw_indexed(0..unsafe { cache::get_index(obj.index_location).len() as u32 }, 0, 0..1); // 2.
                 }
             }
         }
