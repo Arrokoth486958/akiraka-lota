@@ -1,3 +1,5 @@
+pub(crate) mod cache;
+
 use std::collections::HashMap;
 
 use bytemuck::{Pod, Zeroable};
@@ -9,11 +11,12 @@ use wgpu::{
     PipelineLayoutDescriptor, PowerPreference, PrimitiveState, Queue, RenderPassColorAttachment,
     RenderPassDescriptor, RenderPipeline, RenderPipelineDescriptor, RequestAdapterOptions,
     ShaderModuleDescriptor, Surface, SurfaceConfiguration, SurfaceError, TextureUsages,
-    VertexState, Extent3d, TextureDescriptor, TextureFormat, ImageCopyTexture, Origin3d, TextureAspect, ImageDataLayout, BufferUsages, CommandEncoderDescriptor, TextureViewDescriptor, SamplerDescriptor, BindGroupLayoutDescriptor, BindGroupLayoutEntry, ShaderStages, BindingType, TextureSampleType, TextureViewDimension, SamplerBindingType, BindGroupDescriptor, BindGroupEntry, BindingResource, BindGroup, BindGroupLayout,
+    VertexState, Extent3d, TextureDescriptor, TextureFormat, ImageCopyTexture, Origin3d, TextureAspect, ImageDataLayout, BufferUsages, CommandEncoderDescriptor, TextureViewDescriptor, SamplerDescriptor, BindGroupLayoutDescriptor, BindGroupLayoutEntry, ShaderStages, BindingType, TextureSampleType, TextureViewDimension, SamplerBindingType, BindGroupDescriptor, BindGroupEntry, BindingResource, BindGroup, BindGroupLayout, PresentMode,
 };
 use wgpu::{Buffer, BufferAddress, VertexAttribute, VertexBufferLayout};
 use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
 
+use crate::util;
 use crate::{assets::Assets, Exception};
 
 #[repr(C)]
@@ -50,21 +53,28 @@ const INDICES: &[u16] = &[
 ];
 
 pub struct RenderObject {
-    vertex: &'static[Vertex],
-    indices: &'static[u16],
+    vertex_location: usize,
+    index_location: usize,
+    // vertex: &'static[Vertex],
+    // indices: &'static[u16],
 }
 
 impl  RenderObject {
-    pub fn new(vertex: &'static[Vertex], indices: &'static[u16]) -> RenderObject {
+    pub fn new(vertex: Vec<Vertex>, index: Vec<u16>) -> RenderObject {
         // let vertex_buffer = device.create_buffer_init(&BufferInitDescriptor {
         //     label: Some("Vertex Buffer"),
         //     usage: BufferUsages::VERTEX,
         //     contents: bytemuck::cast_slice(vertex),
         // });
-            
+
+        // println!("{:?} :\n {:?}", vertex, util::as_static_vec(vertex.clone()));
+        // println!("{:?} :\n {:?}", indices, util::as_static_vec(indices.clone()));
+        
         RenderObject {
-            vertex,
-            indices,
+            // vertex: util::as_static_vec(vertex),
+            // indices: util::as_static_vec(indices),
+            vertex_location: cache::alloc_vertex(vertex),
+            index_location: cache::alloc_index(index),
         }
     }
 }
@@ -72,6 +82,7 @@ impl  RenderObject {
 // 好哎！
 // https://jinleili.github.io/learn-wgpu-zh/beginner/tutorial2-surface/
 pub struct WGPUInstance {
+    pub instance: Instance,
     pub surface: Surface,
     pub device: Device,
     pub queue: Queue,
@@ -425,19 +436,20 @@ impl WGPUInstance {
         let mut render_objects = Vec::new();
 
         // TODO: 测试
-        render_objects.push(RenderObject::new(
-            &[
-                Vertex { position: [-1.0, -1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 0.0], },
-                Vertex { position: [1.0, -1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 0.0], },
-                Vertex { position: [1.0, 1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 1.0], },
-                Vertex { position: [-1.0, 1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 1.0], },
-            ],
-            &[
-                0, 1, 2,
-                0, 2, 3,
-        ]));
+        // render_objects.push(RenderObject::new(
+        //     &[
+        //         Vertex { position: [-1.0, -1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 0.0], },
+        //         Vertex { position: [1.0, -1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 0.0], },
+        //         Vertex { position: [1.0, 1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 1.0], },
+        //         Vertex { position: [-1.0, 1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 1.0], },
+        //     ],
+        //     &[
+        //         0, 1, 2,
+        //         0, 2, 3,
+        // ]));
 
         WGPUInstance {
+            instance,
             surface,
             device,
             queue,
@@ -452,11 +464,13 @@ impl WGPUInstance {
         }
     }
 
-    pub fn resize(&mut self, new_size: PhysicalSize<u32>) {
+    pub fn resize(&mut self, _window: &Window, new_size: PhysicalSize<u32>) {
         if new_size.width > 0 && new_size.height > 0 {
-            self.size = new_size.clone();
+            self.size = new_size;
             self.config.width = self.size.width;
             self.config.height = self.size.height;
+            self.config.present_mode = PresentMode::AutoVsync;
+            // self.surface.get_current_texture().unwrap().texture.destroy();
             self.surface.configure(&self.device, &self.config);
         }
     }
@@ -510,7 +524,6 @@ impl WGPUInstance {
 
             // 清除上一循环的缓冲
             unsafe {
-                println!("{:?} : {:?}", VERTEX_BUFFERS.len(), INDEX_BUFFERS.len());
                 for buffer in &VERTEX_BUFFERS {
                     buffer.destroy();
                 }
@@ -523,15 +536,18 @@ impl WGPUInstance {
             }
 
             // 然后渲染这一循环
+            // println!("{:?}", self.render_objects);
             for (i, obj) in self.render_objects.iter().enumerate() {
-                println!("{:?}", i);
+                // println!("{:?}", i);
+                // println!("{:?}", obj.vertex);
 
                 // 因为涉及到全局变量所以需要unsafe
                 unsafe {
                     let vertex_buffer = self.device.create_buffer_init(
                         &wgpu::util::BufferInitDescriptor {
                             label: Some(format!("Vertex Buffer: {}", i).as_str()),
-                            contents: bytemuck::cast_slice(obj.vertex),
+                            // contents: bytemuck::cast_slice(obj.vertex),
+                            contents: bytemuck::cast_slice(cache::get_vertex(obj.vertex_location)),
                             usage: wgpu::BufferUsages::VERTEX,
                         }
                     );
@@ -539,7 +555,8 @@ impl WGPUInstance {
                     let index_buffer = self.device.create_buffer_init(
                         &wgpu::util::BufferInitDescriptor {
                             label: Some(format!("Index Buffer: {}", i).as_str()),
-                            contents: bytemuck::cast_slice(INDICES),
+                            // contents: bytemuck::cast_slice(obj.indices),
+                            contents: bytemuck::cast_slice(cache::get_index(obj.index_location)),
                             usage: wgpu::BufferUsages::INDEX,
                         }
                     );
@@ -558,6 +575,9 @@ impl WGPUInstance {
 
         self.queue.submit(Some(encoder.finish()));
         output.present();
+        self.render_objects.clear();
+        cache::clear_vertex();
+        cache::clear_index();
         Ok(())
     }
 

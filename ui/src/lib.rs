@@ -4,6 +4,7 @@ mod app;
 mod assets;
 mod platform;
 mod wgpu;
+mod util;
 
 // 程序的异常类
 #[derive(Debug, Clone)]
