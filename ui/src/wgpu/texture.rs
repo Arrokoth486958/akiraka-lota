@@ -1,6 +1,6 @@
-// pub struct TextureLoader {
-//     internal_path: 
-// }
+pub struct TextureLoader {
+    internal_path: String,
+}
 
-// pub struct Texture {
-// }
+pub struct Texture {
+}

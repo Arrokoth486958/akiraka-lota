@@ -172,7 +172,7 @@ impl WGPUInstance {
         };
         surface.configure(&device, &config);
 
-        // TODO: 纹理部分
+        // TODO: 纹理部分，未来移走
         let diffuse_bytes = Assets::get("textures/happy-tree.png").unwrap().data;
         let diffuse_image = image::load_from_memory(&diffuse_bytes).unwrap();
         let diffuse_rgba = diffuse_image.to_rgba8();
