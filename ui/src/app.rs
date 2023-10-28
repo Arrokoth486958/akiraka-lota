@@ -8,7 +8,7 @@ use winit::{
     window::{WindowBuilder, WindowButtons},
 };
 
-use crate::{wgpu::{WGPUInstance, RenderObject, Vertex, cache}, util};
+use crate::wgpu::{RenderObject, Vertex, WGPUInstance};
 
 // struct LauncherState {
 //     // TODO: 用来传递应用启动参数
@@ -46,16 +46,6 @@ pub fn launch() {
 
     let window = window_builder.build(&event_loop).unwrap();
 
-    // let monitor_size = window.current_monitor().unwrap().size();
-    // let window_size = window.inner_size();
-    // println!("{:?}", monitor_size);
-    // println!("{:?}", window_size);
-    
-    // println!("{:?}", cache::alloc_vertex(Vertex { position: [1.0, 0.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 0.0], }));
-    // println!("{:?}", cache::alloc_vertex(Vertex { position: [2.0, 0.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 0.0], }));
-    // println!("{:?}", cache::alloc_vertex(Vertex { position: [3.0, 0.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 0.0], }));
-    // println!("{:?}", cache::get_vertex(2));
-
     // TODO: 还是一些特定平台的函数
     #[cfg(target_os = "macos")]
     {
@@ -76,7 +66,10 @@ pub fn launch() {
 
     window.set_visible(true);
     // event_loop.set_control_flow(ControlFlow::Wait);
-    let start_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+    let start_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
     event_loop
         .run(move |event, elwt| match event {
             Event::WindowEvent {
@@ -109,24 +102,43 @@ pub fn launch() {
                         }
                         WindowEvent::RedrawRequested => {
                             // TODO: Debug
-                            let x = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() - start_time;
+                            let x = SystemTime::now()
+                                .duration_since(UNIX_EPOCH)
+                                .unwrap()
+                                .as_millis()
+                                - start_time;
                             let x: f32 = (x as f32 / 10000.0).to_degrees().sin();
-                            // println!("{:?}", x);
                             wgpu_instance.render_objects.push(RenderObject::new(
                                 vec![
-                                    Vertex { position: [-1.0 * x, -1.0 * x, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 0.0], },
-                                    Vertex { position: [1.0 * x, -1.0 * x, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 0.0], },
-                                    Vertex { position: [1.0 * x, 1.0 * x, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 1.0], },
-                                    Vertex { position: [-1.0 * x, 1.0 * x, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 1.0], },
+                                    Vertex {
+                                        position: [-1.0 * x, -1.0 * x, 0.0],
+                                        color: [0.0, 0.0, 0.0],
+                                        tex_coords: [0.0, 0.0],
+                                    },
+                                    Vertex {
+                                        position: [1.0 * x, -1.0 * x, 0.0],
+                                        color: [0.0, 0.0, 0.0],
+                                        tex_coords: [1.0, 0.0],
+                                    },
+                                    Vertex {
+                                        position: [1.0 * x, 1.0 * x, 0.0],
+                                        color: [0.0, 0.0, 0.0],
+                                        tex_coords: [1.0, 1.0],
+                                    },
+                                    Vertex {
+                                        position: [-1.0 * x, 1.0 * x, 0.0],
+                                        color: [0.0, 0.0, 0.0],
+                                        tex_coords: [0.0, 1.0],
+                                    },
                                 ],
-                                vec![
-                                    0, 1, 2,
-                                    0, 2, 3,
-                            ]));
+                                vec![0, 1, 2, 0, 2, 3],
+                            ));
                             wgpu_instance.update();
                             match wgpu_instance.render() {
                                 Ok(()) => {}
-                                Err(SurfaceError::Lost) => wgpu_instance.resize(&window, wgpu_instance.size),
+                                Err(SurfaceError::Lost) => {
+                                    wgpu_instance.resize(&window, wgpu_instance.size)
+                                }
                                 Err(SurfaceError::OutOfMemory) => elwt.exit(),
                                 Err(e) => eprintln!("{}", e),
                             }
