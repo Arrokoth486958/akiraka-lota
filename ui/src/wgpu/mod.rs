@@ -1,22 +1,26 @@
 pub(crate) mod cache;
+pub mod texture;
 
 use std::collections::HashMap;
 
 use bytemuck::{Pod, Zeroable};
-use wgpu::util::{DeviceExt, BufferInitDescriptor};
+use wgpu::util::{BufferInitDescriptor, DeviceExt};
 use wgpu::{
-    Adapter, Backends, BlendState, ColorTargetState,
-    ColorWrites, CompositeAlphaMode, Device, DeviceDescriptor, Face, Features, FragmentState,
-    Instance, InstanceDescriptor, Limits, LoadOp, MultisampleState, Operations,
-    PipelineLayoutDescriptor, PowerPreference, PrimitiveState, Queue, RenderPassColorAttachment,
-    RenderPassDescriptor, RenderPipeline, RenderPipelineDescriptor, RequestAdapterOptions,
-    ShaderModuleDescriptor, Surface, SurfaceConfiguration, SurfaceError, TextureUsages,
-    VertexState, Extent3d, TextureDescriptor, TextureFormat, ImageCopyTexture, Origin3d, TextureAspect, ImageDataLayout, BufferUsages, CommandEncoderDescriptor, TextureViewDescriptor, SamplerDescriptor, BindGroupLayoutDescriptor, BindGroupLayoutEntry, ShaderStages, BindingType, TextureSampleType, TextureViewDimension, SamplerBindingType, BindGroupDescriptor, BindGroupEntry, BindingResource, BindGroup, BindGroupLayout, PresentMode,
+    Adapter, Backends, BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
+    BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingResource, BindingType, BlendState,
+    BufferUsages, ColorTargetState, ColorWrites, CommandEncoderDescriptor, CompositeAlphaMode,
+    Device, DeviceDescriptor, Extent3d, Face, Features, FragmentState, ImageCopyTexture,
+    ImageDataLayout, Instance, InstanceDescriptor, Limits, LoadOp, MultisampleState, Operations,
+    Origin3d, PipelineLayoutDescriptor, PowerPreference, PresentMode, PrimitiveState, Queue,
+    RenderPassColorAttachment, RenderPassDescriptor, RenderPipeline, RenderPipelineDescriptor,
+    RequestAdapterOptions, SamplerBindingType, SamplerDescriptor, ShaderModuleDescriptor,
+    ShaderStages, Surface, SurfaceConfiguration, SurfaceError, TextureAspect, TextureDescriptor,
+    TextureFormat, TextureSampleType, TextureUsages, TextureViewDescriptor, TextureViewDimension,
+    VertexState,
 };
 use wgpu::{Buffer, BufferAddress, VertexAttribute, VertexBufferLayout};
 use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
 
-use crate::util;
 use crate::{assets::Assets, Exception};
 
 #[repr(C)]
@@ -41,38 +45,38 @@ impl Vertex {
 }
 
 const VERTICES: &[Vertex] = &[
-    Vertex { position: [-1.0, -1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 0.0], },
-    Vertex { position: [1.0, -1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 0.0], },
-    Vertex { position: [1.0, 1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 1.0], },
-    Vertex { position: [-1.0, 1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 1.0], },
+    Vertex {
+        position: [-1.0, -1.0, 0.0],
+        color: [0.0, 0.0, 0.0],
+        tex_coords: [0.0, 0.0],
+    },
+    Vertex {
+        position: [1.0, -1.0, 0.0],
+        color: [0.0, 0.0, 0.0],
+        tex_coords: [1.0, 0.0],
+    },
+    Vertex {
+        position: [1.0, 1.0, 0.0],
+        color: [0.0, 0.0, 0.0],
+        tex_coords: [1.0, 1.0],
+    },
+    Vertex {
+        position: [-1.0, 1.0, 0.0],
+        color: [0.0, 0.0, 0.0],
+        tex_coords: [0.0, 1.0],
+    },
 ];
 
-const INDICES: &[u16] = &[
-    0, 1, 2,
-    0, 2, 3,
-];
+const INDICES: &[u16] = &[0, 1, 2, 0, 2, 3];
 
 pub struct RenderObject {
     vertex_location: usize,
     index_location: usize,
-    // vertex: &'static[Vertex],
-    // indices: &'static[u16],
 }
 
-impl  RenderObject {
+impl RenderObject {
     pub fn new(vertex: Vec<Vertex>, index: Vec<u16>) -> RenderObject {
-        // let vertex_buffer = device.create_buffer_init(&BufferInitDescriptor {
-        //     label: Some("Vertex Buffer"),
-        //     usage: BufferUsages::VERTEX,
-        //     contents: bytemuck::cast_slice(vertex),
-        // });
-
-        // println!("{:?} :\n {:?}", vertex, util::as_static_vec(vertex.clone()));
-        // println!("{:?} :\n {:?}", indices, util::as_static_vec(indices.clone()));
-        
         RenderObject {
-            // vertex: util::as_static_vec(vertex),
-            // indices: util::as_static_vec(indices),
             vertex_location: cache::alloc_vertex(vertex),
             index_location: cache::alloc_index(index),
         }
@@ -100,7 +104,6 @@ static mut VERTEX_BUFFERS: Vec<Buffer> = Vec::new();
 static mut INDEX_BUFFERS: Vec<Buffer> = Vec::new();
 
 impl WGPUInstance {
-
     pub fn new(window: &Window) -> Self {
         println!("Scalefactor: {:?}", window.scale_factor());
         let size = window.inner_size();
@@ -163,80 +166,77 @@ impl WGPUInstance {
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::Fifo,
-            // alpha_mode: caps.alpha_modes[0],
             alpha_mode: alpha_channel,
             view_formats: vec![],
         };
         surface.configure(&device, &config);
 
-        // TODO: 纹理部分
+        // TODO: 纹理部分，未来移走
         let diffuse_bytes = Assets::get("textures/happy-tree.png").unwrap().data;
         let diffuse_image = image::load_from_memory(&diffuse_bytes).unwrap();
         let diffuse_rgba = diffuse_image.to_rgba8();
 
         use image::GenericImageView;
         let dimensions = diffuse_image.dimensions();
-        
+
         let texture_size = Extent3d {
             width: dimensions.0,
             height: dimensions.1,
             depth_or_array_layers: 1,
         };
-        let diffuse_texture = device.create_texture(
-            &TextureDescriptor {
-                size: texture_size,
-                mip_level_count: 1,
-                sample_count: 1,
-                dimension: wgpu::TextureDimension::D2,
-                format: TextureFormat::Rgba8UnormSrgb,
-                usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST,
-                label: Some("diffuse_texture"),
-                view_formats: &[],
-            }
+        let diffuse_texture = device.create_texture(&TextureDescriptor {
+            size: texture_size,
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: TextureFormat::Rgba8UnormSrgb,
+            usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST,
+            label: Some("diffuse_texture"),
+            view_formats: &[],
+        });
+
+        queue.write_texture(
+            ImageCopyTexture {
+                texture: &diffuse_texture,
+                mip_level: 0,
+                origin: Origin3d::ZERO,
+                aspect: TextureAspect::All,
+            },
+            &diffuse_rgba,
+            ImageDataLayout {
+                offset: 0,
+                bytes_per_row: Some(4 * dimensions.0),
+                rows_per_image: Some(dimensions.1),
+            },
+            texture_size,
         );
 
-        queue.write_texture(ImageCopyTexture {
-            texture: &diffuse_texture,
-            mip_level: 0,
-            origin: Origin3d::ZERO,
-            aspect: TextureAspect::All,
-        }, 
-        &diffuse_rgba, 
-        ImageDataLayout {
-            offset: 0,
-            bytes_per_row: Some(4 * dimensions.0),
-            rows_per_image: Some(dimensions.1),
-        }, 
-        texture_size);
-
-        let buffer = device.create_buffer_init(
-            &BufferInitDescriptor {
-                label: Some("Temp Buffer"),
-                contents: &diffuse_rgba,
-                usage: BufferUsages::COPY_SRC,
-            }
-        );
+        let buffer = device.create_buffer_init(&BufferInitDescriptor {
+            label: Some("Temp Buffer"),
+            contents: &diffuse_rgba,
+            usage: BufferUsages::COPY_SRC,
+        });
 
         let mut encoder = device.create_command_encoder(&CommandEncoderDescriptor {
-            label: Some("texture_buffer_copy_encoder"),            
+            label: Some("texture_buffer_copy_encoder"),
         });
 
         encoder.copy_buffer_to_texture(
             wgpu::ImageCopyBuffer {
-                    buffer: &buffer,
-                    layout: ImageDataLayout {
-                        offset: 0,
-                        bytes_per_row: Some(4 * dimensions.0),
-                        rows_per_image: Some(dimensions.1),
-                    },
+                buffer: &buffer,
+                layout: ImageDataLayout {
+                    offset: 0,
+                    bytes_per_row: Some(4 * dimensions.0),
+                    rows_per_image: Some(dimensions.1),
                 },
-                ImageCopyTexture {
-                    texture: &diffuse_texture,
-                    mip_level: 0,
-                    aspect: TextureAspect::All,
-                    origin: Origin3d::ZERO,
-                },
-                texture_size
+            },
+            ImageCopyTexture {
+                texture: &diffuse_texture,
+                mip_level: 0,
+                aspect: TextureAspect::All,
+                origin: Origin3d::ZERO,
+            },
+            texture_size,
         );
 
         queue.submit(Some(encoder.finish()));
@@ -252,46 +252,43 @@ impl WGPUInstance {
             ..Default::default()
         });
 
-        let texture_bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-            entries: &[
-                BindGroupLayoutEntry {
-                    binding: 0,
-                    visibility: ShaderStages::FRAGMENT,
-                    ty: BindingType::Texture {
-                        multisampled: false,
-                        view_dimension: TextureViewDimension::D2,
-                        sample_type: TextureSampleType::Float { 
-                            filterable: true, 
+        let texture_bind_group_layout =
+            device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+                entries: &[
+                    BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: ShaderStages::FRAGMENT,
+                        ty: BindingType::Texture {
+                            multisampled: false,
+                            view_dimension: TextureViewDimension::D2,
+                            sample_type: TextureSampleType::Float { filterable: true },
                         },
+                        count: None,
                     },
-                    count: None,
+                    BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: ShaderStages::FRAGMENT,
+                        ty: BindingType::Sampler(SamplerBindingType::Filtering),
+                        count: None,
+                    },
+                ],
+                label: Some("texture_bind_group_layout"),
+            });
+
+        let diffuse_bind_group = device.create_bind_group(&BindGroupDescriptor {
+            layout: &texture_bind_group_layout,
+            entries: &[
+                BindGroupEntry {
+                    binding: 0,
+                    resource: BindingResource::TextureView(&diffuse_texture_view),
                 },
-                BindGroupLayoutEntry {
+                BindGroupEntry {
                     binding: 1,
-                    visibility: ShaderStages::FRAGMENT,
-                    ty: BindingType::Sampler(SamplerBindingType::Filtering),
-                    count: None,
+                    resource: BindingResource::Sampler(&diffuse_sampler),
                 },
             ],
-            label: Some("texture_bind_group_layout"),
+            label: Some("diffuse_bind_group"),
         });
-
-        let diffuse_bind_group = device.create_bind_group(
-            &BindGroupDescriptor {
-                layout: &texture_bind_group_layout,
-                entries: &[
-                    BindGroupEntry {
-                        binding: 0,
-                        resource: BindingResource::TextureView(&diffuse_texture_view),
-                    },
-                    BindGroupEntry {
-                        binding: 1,
-                        resource: BindingResource::Sampler(&diffuse_sampler),
-                    }
-                ],
-                label: Some("diffuse_bind_group"),
-            }
-        );
         // 好家伙纹理的东西真不少
 
         let mut render_pipelines = HashMap::new();
@@ -415,38 +412,21 @@ impl WGPUInstance {
             position_texture(&device, &config, texture_bind_group_layout).unwrap(),
         );
 
-        let vertex_buffer = device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-                label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(VERTICES),
-                usage: wgpu::BufferUsages::VERTEX,
-            }
-        );
+        let vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Vertex Buffer"),
+            contents: bytemuck::cast_slice(VERTICES),
+            usage: wgpu::BufferUsages::VERTEX,
+        });
 
-        let index_buffer = device.create_buffer_init(
-            &wgpu::util::BufferInitDescriptor {
-                label: Some("Index Buffer"),
-                contents: bytemuck::cast_slice(INDICES),
-                usage: wgpu::BufferUsages::INDEX,
-            }
-        );  
+        let index_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("Index Buffer"),
+            contents: bytemuck::cast_slice(INDICES),
+            usage: wgpu::BufferUsages::INDEX,
+        });
 
         let num_indices = INDICES.len() as u32;
 
-        let mut render_objects = Vec::new();
-
-        // TODO: 测试
-        // render_objects.push(RenderObject::new(
-        //     &[
-        //         Vertex { position: [-1.0, -1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 0.0], },
-        //         Vertex { position: [1.0, -1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 0.0], },
-        //         Vertex { position: [1.0, 1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 1.0], },
-        //         Vertex { position: [-1.0, 1.0, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 1.0], },
-        //     ],
-        //     &[
-        //         0, 1, 2,
-        //         0, 2, 3,
-        // ]));
+        let render_objects = Vec::new();
 
         WGPUInstance {
             instance,
@@ -543,31 +523,39 @@ impl WGPUInstance {
 
                 // 因为涉及到全局变量所以需要unsafe
                 unsafe {
-                    let vertex_buffer = self.device.create_buffer_init(
-                        &wgpu::util::BufferInitDescriptor {
-                            label: Some(format!("Vertex Buffer: {}", i).as_str()),
-                            // contents: bytemuck::cast_slice(obj.vertex),
-                            contents: bytemuck::cast_slice(cache::get_vertex(obj.vertex_location)),
-                            usage: wgpu::BufferUsages::VERTEX,
-                        }
-                    );
+                    let vertex_buffer =
+                        self.device
+                            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                                label: Some(format!("Vertex Buffer: {}", i).as_str()),
+                                // contents: bytemuck::cast_slice(obj.vertex),
+                                contents: bytemuck::cast_slice(cache::get_vertex(
+                                    obj.vertex_location,
+                                )),
+                                usage: wgpu::BufferUsages::VERTEX,
+                            });
 
-                    let index_buffer = self.device.create_buffer_init(
-                        &wgpu::util::BufferInitDescriptor {
-                            label: Some(format!("Index Buffer: {}", i).as_str()),
-                            // contents: bytemuck::cast_slice(obj.indices),
-                            contents: bytemuck::cast_slice(cache::get_index(obj.index_location)),
-                            usage: wgpu::BufferUsages::INDEX,
-                        }
-                    );
+                    let index_buffer =
+                        self.device
+                            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                                label: Some(format!("Index Buffer: {}", i).as_str()),
+                                // contents: bytemuck::cast_slice(obj.indices),
+                                contents: bytemuck::cast_slice(cache::get_index(
+                                    obj.index_location,
+                                )),
+                                usage: wgpu::BufferUsages::INDEX,
+                            });
                     // 所有权转移
                     VERTEX_BUFFERS.push(vertex_buffer);
                     INDEX_BUFFERS.push(index_buffer);
-                    
-                    render_pass.set_pipeline(&self.render_pipelines.get("position_texture").unwrap());
+
+                    render_pass
+                        .set_pipeline(&self.render_pipelines.get("position_texture").unwrap());
                     render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
                     render_pass.set_vertex_buffer(0, VERTEX_BUFFERS.last().unwrap().slice(..));
-                    render_pass.set_index_buffer(INDEX_BUFFERS.last().unwrap().slice(..), wgpu::IndexFormat::Uint16); // 1.
+                    render_pass.set_index_buffer(
+                        INDEX_BUFFERS.last().unwrap().slice(..),
+                        wgpu::IndexFormat::Uint16,
+                    ); // 1.
                     render_pass.draw_indexed(0..self.num_indices, 0, 0..1); // 2.
                 }
             }
@@ -580,9 +568,4 @@ impl WGPUInstance {
         cache::clear_index();
         Ok(())
     }
-
-    // 好像没啥用
-    // pub fn load_pipeline(&mut self, shader_path: String) -> Result<RenderPipeline, Exception> {
-    //     todo!()
-    // }
 }

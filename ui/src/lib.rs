@@ -3,8 +3,8 @@ use std::{error::Error, fmt::Display};
 mod app;
 mod assets;
 mod platform;
-mod wgpu;
 mod util;
+mod wgpu;
 
 // 程序的异常类
 #[derive(Debug, Clone)]

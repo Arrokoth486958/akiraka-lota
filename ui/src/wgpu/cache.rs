@@ -11,9 +11,7 @@ pub fn alloc_vertex(vertex: Vec<Vertex>) -> usize {
 }
 
 pub fn get_vertex(index: usize) -> &'static Vec<Vertex> {
-    unsafe {
-        VERTEX_CACHE.get(index).unwrap()
-    }
+    unsafe { VERTEX_CACHE.get(index).unwrap() }
 }
 
 pub fn clear_vertex() {
@@ -33,9 +31,7 @@ pub fn alloc_index(index: Vec<u16>) -> usize {
 }
 
 pub fn get_index(index: usize) -> &'static Vec<u16> {
-    unsafe {
-        INDEX_CACHE.get(index).unwrap()
-    }
+    unsafe { INDEX_CACHE.get(index).unwrap() }
 }
 
 pub fn clear_index() {

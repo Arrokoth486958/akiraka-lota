@@ -8,11 +8,12 @@ edition = "2021"
 [dependencies]
 env_logger = "0.10"
 log = "0.4"
-window-vibrancy = "0.4.2"
+window-vibrancy = "0.4"
 raw-window-handle = "0.5"
-pollster = "0.3.0"
+pollster = "0.3"
 rust-embed = "6.0"
 bytemuck = { version = "1.14", features = [ "derive" ] }
+glyphon = "0.3"
 
 [dependencies.image]
 version = "0.24"
