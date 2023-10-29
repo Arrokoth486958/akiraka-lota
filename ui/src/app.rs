@@ -1,6 +1,7 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use wgpu::SurfaceError;
+use glyphon::{TextRenderer, FontSystem, SwashCache, TextAtlas, Metrics, Attrs};
+use wgpu::{SurfaceError, MultisampleState};
 use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
@@ -8,7 +9,7 @@ use winit::{
     window::{WindowBuilder, WindowButtons},
 };
 
-use crate::{wgpu::{WGPUInstance, RenderObject, Vertex, cache}, util};
+use crate::{wgpu::{WGPUInstance, RenderObject, Vertex}, util, assets::Assets};
 
 // struct LauncherState {
 //     // TODO: 用来传递应用启动参数
@@ -64,6 +65,14 @@ pub fn launch() {
     // Wgpu实例
     let mut wgpu_instance = WGPUInstance::new(&window);
 
+    // let mut font_system = FontSystem::new();
+    // let mut cache = SwashCache::new();
+    // let mut atlas = TextAtlas::new(&wgpu_instance.device, &wgpu_instance.queue, wgpu_instance.config.format);
+    // let mut text_renderer = TextRenderer::new(&mut atlas, &wgpu_instance.device, MultisampleState::default(), None);
+    // let mut buffer = glyphon::Buffer::new(&mut font_system, Metrics::new(30.0, 42.0));
+    // buffer.set_size(&mut font_system, 64.0, 16.0);
+    // buffer.set_text(&mut font_system, "Hello Akiraka!", Attrs::new().family(glyphon::Family::Serif), glyphon::Shaping::Advanced);
+
     window.set_visible(true);
     event_loop.set_control_flow(ControlFlow::Poll);
     let start_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
@@ -113,6 +122,10 @@ pub fn launch() {
                                     0, 1, 2,
                                     0, 2, 3,
                             ]));
+
+                            // let font_system = FontSystem::new();
+                            // let cache = SwashCache::new();
+                            // let atlas = TextAtlas::new(&wgpu_instance.device, &wgpu_instance.queue, wgpu_instance.config.format);
                             
                             wgpu_instance.update();
                             match wgpu_instance.render() {

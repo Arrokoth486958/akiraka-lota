@@ -13,7 +13,7 @@ raw-window-handle = "0.5"
 pollster = "0.3"
 rust-embed = "6.0"
 bytemuck = { version = "1.14", features = [ "derive" ] }
-glyphon = "0.3"
+glyphon = { git = "https://github.com/Arrokoth486958/glyphon.git" }
 
 [dependencies.image]
 version = "0.24"
@@ -21,7 +21,7 @@ default-features = true
 features = ["png", "jpeg"]
 
 [dependencies.wgpu]
-version = "0.17"
+version = "0.17.1"
 features = ["default", "glsl"]
 
 [target.'cfg(target_os = "macos")'.dependencies]

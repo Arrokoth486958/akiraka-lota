@@ -4,6 +4,7 @@ pub mod texture;
 use std::collections::HashMap;
 
 use bytemuck::{Pod, Zeroable};
+use glyphon::{FontSystem, SwashCache, TextAtlas, TextRenderer, Metrics, Attrs, Resolution, TextArea, TextBounds};
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 use wgpu::{
     Adapter, Backends, BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
@@ -419,6 +420,17 @@ impl WGPUInstance {
     }
 
     pub fn render(&mut self) -> Result<(), SurfaceError> {
+        // TODO: 测试
+        let mut font_system = FontSystem::new();
+        let mut cache = SwashCache::new();
+        let mut atlas = TextAtlas::new(&self.device, &self.queue, self.config.format);
+        let mut text_renderer = TextRenderer::new(&mut atlas, &self.device, MultisampleState::default(), None);
+        let mut buffer = glyphon::Buffer::new(&mut font_system, Metrics::new(30.0, 42.0));
+
+        buffer.set_size(&mut font_system, self.size.width as f32, self.size.height as f32);
+        buffer.set_text(&mut font_system, "Hello Akiraka!", Attrs::new().family(glyphon::Family::Serif), glyphon::Shaping::Advanced);
+        buffer.shape_until_scroll(&mut font_system);
+
         // 啥也不是 o.0
         let output = self.surface.get_current_texture()?;
         let view = output
@@ -443,7 +455,7 @@ impl WGPUInstance {
                             b: 0.0,
                             a: 0.0,
                         }),
-                        store: true,
+                        store: true
                     },
                 })],
                 depth_stencil_attachment: None,
@@ -501,6 +513,31 @@ impl WGPUInstance {
                     render_pass.draw_indexed(0..unsafe { cache::get_index(obj.index_location).len() as u32 }, 0, 0..1); // 2.
                 }
             }
+            // TODO: 测试
+            text_renderer.prepare(
+                &self.device, 
+                &self.queue,
+                &mut font_system, 
+                &mut atlas, 
+                Resolution {
+                    width: self.size.width,
+                    height: self.config.height,
+                }, 
+                [TextArea {
+                    buffer: &buffer,
+                    left: 10.0,
+                    top: 10.0,
+                    scale: 1.0,
+                    bounds: TextBounds {
+                        left: 0,
+                        top: 0,
+                        right: 600,
+                        bottom: 160,
+                    },
+                    default_color: glyphon::Color::rgb(255, 255, 255)
+                }], 
+                &mut cache);
+            text_renderer.render(&atlas, &mut render_pass).unwrap();
         }
 
         self.queue.submit(Some(encoder.finish()));
