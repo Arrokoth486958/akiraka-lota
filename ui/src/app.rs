@@ -136,7 +136,7 @@ pub fn launch() {
                             }
 
                             if !window.is_minimized().unwrap() && window.is_visible().unwrap() {
-                                // window.request_redraw();
+                                window.request_redraw();
                             }
                             // if window_id == window.id() {
                             //     gl_state.update();
