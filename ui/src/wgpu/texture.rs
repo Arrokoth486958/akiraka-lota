@@ -1,13 +1,15 @@
-use std::borrow::BorrowMut;
+use std::{borrow::BorrowMut, alloc::Layout};
 
-use wgpu::{BindGroup, Extent3d, TextureFormat, TextureUsages, ImageCopyTexture, TextureAspect, Origin3d, ImageDataLayout, util::{BufferInitDescriptor, DeviceExt}, BufferUsages, CommandEncoderDescriptor, SamplerDescriptor, TextureViewDescriptor, BindGroupLayoutDescriptor, BindGroupLayoutEntry, ShaderStages, BindingType, TextureViewDimension, TextureSampleType, SamplerBindingType, BindGroupDescriptor, BindGroupEntry, BindingResource};
+use wgpu::{BindGroup, Extent3d, TextureFormat, TextureUsages, ImageCopyTexture, TextureAspect, Origin3d, ImageDataLayout, util::{BufferInitDescriptor, DeviceExt}, BufferUsages, CommandEncoderDescriptor, SamplerDescriptor, TextureViewDescriptor, BindGroupLayoutDescriptor, BindGroupLayoutEntry, ShaderStages, BindingType, TextureViewDimension, TextureSampleType, SamplerBindingType, BindGroupDescriptor, BindGroupEntry, BindingResource, RenderPass};
 
 use crate::Exception;
 
 use super::WGPUInstance;
 
 pub struct Texture {
-    bind_group: BindGroup,
+    bind_group_layout: Layout,
+    bind_group_ptr: *mut u8,
+    // bind_group: &'static BindGroup,
     size: Extent3d,
     texture: wgpu::Texture
 }
@@ -131,14 +133,37 @@ impl Texture {
             label: Some("bind_group"),
         });
 
+        // 这位更是重量级
+        // 手动分配内存真有你的
+        // 这不也是没办法吗？
+        let bind_group_layout = Layout::new::<BindGroup>();
+        let bind_group_ptr = unsafe {
+            let ptr = std::alloc::alloc(bind_group_layout);
+            *(ptr as *mut BindGroup) = bind_group;
+            // &*(ptr as *mut BindGroup)
+            ptr
+        };
+
         Texture {
-            bind_group,
+            bind_group_ptr,
+            bind_group_layout,
+            // bind_group,
             size: texture_size,
             texture,
         }
     }
 
-    pub fn destroy(&mut self) {
+    pub fn bind(&mut self, render_pass: &mut RenderPass) {
+        // render_pass.set_bind_group(0, &self.bind_group, &[]);
+        render_pass.set_bind_group(0, unsafe { &*(self.bind_group_ptr as *mut BindGroup) }, &[]);
+    }
+
+    // 一定要调用！！！
+    // 不然内存泄漏把你搞哭
+    pub fn destroy(&'static mut self) {
         self.texture.destroy();
+        unsafe {
+            std::alloc::dealloc(self.bind_group_ptr, self.bind_group_layout);
+        }
     }
 }

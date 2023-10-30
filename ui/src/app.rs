@@ -135,9 +135,10 @@ pub fn launch() {
                                 Err(e) => eprintln!("{}", e),
                             }
 
-                            if !window.is_minimized().unwrap() && window.is_visible().unwrap() {
-                                window.request_redraw();
-                            }
+                            // if !window.is_minimized().unwrap() && window.is_visible().unwrap() {
+                            //     window.request_redraw();
+                            // }
+                            
                             // if window_id == window.id() {
                             //     gl_state.update();
                             //     // 渲染并处理错误
