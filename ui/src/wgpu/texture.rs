@@ -1,4 +1,4 @@
-use std::{borrow::BorrowMut, alloc::Layout};
+use std::{borrow::BorrowMut, alloc::{Layout, handle_alloc_error}, collections::{HashMap, HashSet}};
 
 use wgpu::{BindGroup, Extent3d, TextureFormat, TextureUsages, ImageCopyTexture, TextureAspect, Origin3d, ImageDataLayout, util::{BufferInitDescriptor, DeviceExt}, BufferUsages, CommandEncoderDescriptor, SamplerDescriptor, TextureViewDescriptor, BindGroupLayoutDescriptor, BindGroupLayoutEntry, ShaderStages, BindingType, TextureViewDimension, TextureSampleType, SamplerBindingType, BindGroupDescriptor, BindGroupEntry, BindingResource, RenderPass};
 
@@ -10,12 +10,13 @@ pub struct Texture {
     bind_group_layout: Layout,
     bind_group_ptr: *mut u8,
     // bind_group: &'static BindGroup,
+    // bind_group_position: usize,
     size: Extent3d,
     texture: wgpu::Texture
 }
 
 impl Texture {
-    fn read_from_bytes(bytes: &[u8], instance: &WGPUInstance) -> Texture {
+    pub fn from_bytes(bytes: &[u8], instance: &WGPUInstance) -> Texture {
         let image = image::load_from_memory(bytes).unwrap();
         let rgba = image.to_rgba8();
 
@@ -136,13 +137,26 @@ impl Texture {
         // 这位更是重量级
         // 手动分配内存真有你的
         // 这不也是没办法吗？
-        let bind_group_layout = Layout::new::<BindGroup>();
+        // let bind_group_layout = Layout::new::<BindGroup>();
+        let bind_group_layout = Layout::for_value::<BindGroup>(&bind_group);
         let bind_group_ptr = unsafe {
             let ptr = std::alloc::alloc(bind_group_layout);
+            if ptr.is_null() {
+                handle_alloc_error(bind_group_layout);
+            }
+            println!("{:?}", ptr);
+            // println!("{:?}", *(ptr as *mut BindGroup));
             *(ptr as *mut BindGroup) = bind_group;
             // &*(ptr as *mut BindGroup)
             ptr
         };
+
+        let bind_group_ptr: *mut u8 = std::ptr::null_mut();
+
+        // let bind_group_position = unsafe {
+            // bind_groups.(bind_group);
+            // bind_groups.len() - 1
+        // };
 
         Texture {
             bind_group_ptr,

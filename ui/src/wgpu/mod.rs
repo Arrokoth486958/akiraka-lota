@@ -431,6 +431,7 @@ impl WGPUInstance {
         // buffer.set_text(&mut font_system, "Hello Akiraka!", Attrs::new().family(glyphon::Family::Serif), glyphon::Shaping::Advanced);
         // buffer.shape_until_scroll(&mut font_system);
 
+        let mut texture = crate::wgpu::texture::Texture::from_bytes(&Assets::get("textures/happy-tree.png").unwrap().data, &self);
         // 啥也不是 o.0
         let output = self.surface.get_current_texture()?;
         let view = output
@@ -505,6 +506,7 @@ impl WGPUInstance {
                     render_pass
                         .set_pipeline(&self.render_pipelines.get("position_texture").unwrap());
                     render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
+                    // texture.bind(&mut render_pass);
                     render_pass.set_vertex_buffer(0, VERTEX_BUFFERS.last().unwrap().slice(..));
                     render_pass.set_index_buffer(
                         INDEX_BUFFERS.last().unwrap().slice(..),

@@ -9,7 +9,7 @@ use winit::{
     window::{WindowBuilder, WindowButtons},
 };
 
-use crate::{wgpu::{WGPUInstance, RenderObject, Vertex}, util, assets::Assets};
+use crate::{wgpu::{WGPUInstance, RenderObject, Vertex, texture::Texture}, util, assets::Assets};
 
 // struct LauncherState {
 //     // TODO: 用来传递应用启动参数
@@ -126,7 +126,7 @@ pub fn launch() {
                             // let font_system = FontSystem::new();
                             // let cache = SwashCache::new();
                             // let atlas = TextAtlas::new(&wgpu_instance.device, &wgpu_instance.queue, wgpu_instance.config.format);
-                            
+                        
                             wgpu_instance.update();
                             match wgpu_instance.render() {
                                 Ok(()) => {}
