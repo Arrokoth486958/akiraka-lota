@@ -1,15 +1,14 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use glyphon::{TextRenderer, FontSystem, SwashCache, TextAtlas, Metrics, Attrs};
-use wgpu::{SurfaceError, MultisampleState};
+use wgpu::SurfaceError;
 use winit::{
     dpi::LogicalSize,
     event::{Event, WindowEvent},
-    event_loop::{EventLoop, ControlFlow},
+    event_loop::{ControlFlow, EventLoop},
     window::{WindowBuilder, WindowButtons},
 };
 
-use crate::{wgpu::{WGPUInstance, RenderObject, Vertex, texture::Texture}, util, assets::Assets};
+use crate::wgpu::{RenderObject, Vertex, WGPUInstance};
 
 // struct LauncherState {
 //     // TODO: 用来传递应用启动参数
@@ -53,13 +52,10 @@ pub fn launch() {
         crate::platform::macos::init_window(&window)
             .expect("Could not configure custom Window Settings for macOS!");
     }
+    // TODO: 没用
     #[cfg(target_os = "windows")]
     {
-        // use winit::platform::windows::WindowExtWindows;
-        // window.set_decorations(false);
-        // window.set_undecorated_shadow(true);
-        // // window.drag_resize_window(winit::window::ResizeDirection::NorthWest);
-        // window.set_transparent(true);
+        // window.drag_resize_window(winit::window::ResizeDirection::NorthWest);=
     }
 
     // Wgpu实例
@@ -75,7 +71,10 @@ pub fn launch() {
 
     window.set_visible(true);
     event_loop.set_control_flow(ControlFlow::Poll);
-    let start_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
+    let start_time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
     event_loop
         .run(move |event, elwt| match event {
             Event::WindowEvent {
@@ -108,29 +107,49 @@ pub fn launch() {
                         }
                         WindowEvent::RedrawRequested => {
                             // TODO: Debug
-                            let x = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() - start_time;
+                            let x = SystemTime::now()
+                                .duration_since(UNIX_EPOCH)
+                                .unwrap()
+                                .as_millis()
+                                - start_time;
                             let x: f32 = (x as f32 / 10000.0).to_degrees().sin();
                             // println!("{:?}", x);
                             wgpu_instance.render_objects.push(RenderObject::new(
                                 vec![
-                                    Vertex { position: [-1.0 * x, -1.0 * x, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 0.0], },
-                                    Vertex { position: [1.0 * x, -1.0 * x, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 0.0], },
-                                    Vertex { position: [1.0 * x, 1.0 * x, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [1.0, 1.0], },
-                                    Vertex { position: [-1.0 * x, 1.0 * x, 0.0], color: [0.0, 0.0, 0.0], tex_coords: [0.0, 1.0], },
+                                    Vertex {
+                                        position: [-1.0 * x, -1.0 * x, 0.0],
+                                        color: [0.0, 0.0, 0.0],
+                                        tex_coords: [0.0, 0.0],
+                                    },
+                                    Vertex {
+                                        position: [1.0 * x, -1.0 * x, 0.0],
+                                        color: [0.0, 0.0, 0.0],
+                                        tex_coords: [1.0, 0.0],
+                                    },
+                                    Vertex {
+                                        position: [1.0 * x, 1.0 * x, 0.0],
+                                        color: [0.0, 0.0, 0.0],
+                                        tex_coords: [1.0, 1.0],
+                                    },
+                                    Vertex {
+                                        position: [-1.0 * x, 1.0 * x, 0.0],
+                                        color: [0.0, 0.0, 0.0],
+                                        tex_coords: [0.0, 1.0],
+                                    },
                                 ],
-                                vec![
-                                    0, 1, 2,
-                                    0, 2, 3,
-                            ]));
+                                vec![0, 1, 2, 0, 2, 3],
+                            ));
 
                             // let font_system = FontSystem::new();
                             // let cache = SwashCache::new();
                             // let atlas = TextAtlas::new(&wgpu_instance.device, &wgpu_instance.queue, wgpu_instance.config.format);
-                        
+
                             wgpu_instance.update();
                             match wgpu_instance.render() {
                                 Ok(()) => {}
-                                Err(SurfaceError::Lost) => wgpu_instance.resize(&window, wgpu_instance.size),
+                                Err(SurfaceError::Lost) => {
+                                    wgpu_instance.resize(&window, wgpu_instance.size)
+                                }
                                 Err(SurfaceError::OutOfMemory) => elwt.exit(),
                                 Err(e) => eprintln!("{}", e),
                             }
@@ -138,7 +157,7 @@ pub fn launch() {
                             // if !window.is_minimized().unwrap() && window.is_visible().unwrap() {
                             //     window.request_redraw();
                             // }
-                            
+
                             // if window_id == window.id() {
                             //     gl_state.update();
                             //     // 渲染并处理错误

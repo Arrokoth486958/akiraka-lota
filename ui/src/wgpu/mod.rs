@@ -4,20 +4,16 @@ pub mod texture;
 use std::collections::HashMap;
 
 use bytemuck::{Pod, Zeroable};
-use glyphon::{FontSystem, SwashCache, TextAtlas, TextRenderer, Metrics, Attrs, Resolution, TextArea, TextBounds};
-use wgpu::util::{BufferInitDescriptor, DeviceExt};
+use wgpu::util::DeviceExt;
 use wgpu::{
-    Adapter, Backends, BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
-    BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingResource, BindingType, BlendState,
-    BufferUsages, ColorTargetState, ColorWrites, CommandEncoderDescriptor, CompositeAlphaMode,
-    Device, DeviceDescriptor, Extent3d, Face, Features, FragmentState, ImageCopyTexture,
-    ImageDataLayout, Instance, InstanceDescriptor, Limits, LoadOp, MultisampleState, Operations,
-    Origin3d, PipelineLayoutDescriptor, PowerPreference, PresentMode, PrimitiveState, Queue,
-    RenderPassColorAttachment, RenderPassDescriptor, RenderPipeline, RenderPipelineDescriptor,
-    RequestAdapterOptions, SamplerBindingType, SamplerDescriptor, ShaderModuleDescriptor,
-    ShaderStages, Surface, SurfaceConfiguration, SurfaceError, TextureAspect, TextureDescriptor,
-    TextureFormat, TextureSampleType, TextureUsages, TextureViewDescriptor, TextureViewDimension,
-    VertexState,
+    Adapter, Backends, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry,
+    BindingType, BlendState, ColorTargetState, ColorWrites, CompositeAlphaMode, Device,
+    DeviceDescriptor, Face, Features, FragmentState, Instance, InstanceDescriptor, Limits, LoadOp,
+    MultisampleState, Operations, PipelineLayoutDescriptor, PowerPreference, PresentMode,
+    PrimitiveState, Queue, RenderPassColorAttachment, RenderPassDescriptor, RenderPipeline,
+    RenderPipelineDescriptor, RequestAdapterOptions, SamplerBindingType, ShaderModuleDescriptor,
+    ShaderStages, Surface, SurfaceConfiguration, SurfaceError, TextureSampleType, TextureUsages,
+    TextureViewDimension, VertexState,
 };
 use wgpu::{Buffer, BufferAddress, VertexAttribute, VertexBufferLayout};
 use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
@@ -69,7 +65,7 @@ pub struct WGPUInstance {
     pub config: SurfaceConfiguration,
     pub size: PhysicalSize<u32>,
     pub render_pipelines: HashMap<String, RenderPipeline>,
-    pub diffuse_bind_group: BindGroup,
+    pub texture_bind_group_layout: BindGroupLayout,
     pub render_objects: Vec<RenderObject>,
 }
 
@@ -144,87 +140,6 @@ impl WGPUInstance {
         };
         surface.configure(&device, &config);
 
-        // TODO: 纹理部分，未来移走
-        let diffuse_bytes = Assets::get("textures/happy-tree.png").unwrap().data;
-        let diffuse_image = image::load_from_memory(&diffuse_bytes).unwrap();
-        let diffuse_rgba = diffuse_image.to_rgba8();
-
-        use image::GenericImageView;
-        let dimensions = diffuse_image.dimensions();
-
-        let texture_size = Extent3d {
-            width: dimensions.0,
-            height: dimensions.1,
-            depth_or_array_layers: 1,
-        };
-        let diffuse_texture = device.create_texture(&TextureDescriptor {
-            size: texture_size,
-            mip_level_count: 1,
-            sample_count: 1,
-            dimension: wgpu::TextureDimension::D2,
-            format: TextureFormat::Rgba8UnormSrgb,
-            usage: TextureUsages::TEXTURE_BINDING | TextureUsages::COPY_DST,
-            label: Some("diffuse_texture"),
-            view_formats: &[],
-        });
-
-        queue.write_texture(
-            ImageCopyTexture {
-                texture: &diffuse_texture,
-                mip_level: 0,
-                origin: Origin3d::ZERO,
-                aspect: TextureAspect::All,
-            },
-            &diffuse_rgba,
-            ImageDataLayout {
-                offset: 0,
-                bytes_per_row: Some(4 * dimensions.0),
-                rows_per_image: Some(dimensions.1),
-            },
-            texture_size,
-        );
-
-        let buffer = device.create_buffer_init(&BufferInitDescriptor {
-            label: Some("Temp Buffer"),
-            contents: &diffuse_rgba,
-            usage: BufferUsages::COPY_SRC,
-        });
-
-        let mut encoder = device.create_command_encoder(&CommandEncoderDescriptor {
-            label: Some("texture_buffer_copy_encoder"),
-        });
-
-        encoder.copy_buffer_to_texture(
-            wgpu::ImageCopyBuffer {
-                buffer: &buffer,
-                layout: ImageDataLayout {
-                    offset: 0,
-                    bytes_per_row: Some(4 * dimensions.0),
-                    rows_per_image: Some(dimensions.1),
-                },
-            },
-            ImageCopyTexture {
-                texture: &diffuse_texture,
-                mip_level: 0,
-                aspect: TextureAspect::All,
-                origin: Origin3d::ZERO,
-            },
-            texture_size,
-        );
-
-        queue.submit(Some(encoder.finish()));
-
-        let diffuse_texture_view = diffuse_texture.create_view(&TextureViewDescriptor::default());
-        let diffuse_sampler = device.create_sampler(&SamplerDescriptor {
-            address_mode_u: wgpu::AddressMode::ClampToEdge,
-            address_mode_v: wgpu::AddressMode::ClampToEdge,
-            address_mode_w: wgpu::AddressMode::ClampToEdge,
-            mag_filter: wgpu::FilterMode::Linear,
-            min_filter: wgpu::FilterMode::Nearest,
-            mipmap_filter: wgpu::FilterMode::Nearest,
-            ..Default::default()
-        });
-
         let texture_bind_group_layout =
             device.create_bind_group_layout(&BindGroupLayoutDescriptor {
                 entries: &[
@@ -247,22 +162,6 @@ impl WGPUInstance {
                 ],
                 label: Some("texture_bind_group_layout"),
             });
-
-        let diffuse_bind_group = device.create_bind_group(&BindGroupDescriptor {
-            layout: &texture_bind_group_layout,
-            entries: &[
-                BindGroupEntry {
-                    binding: 0,
-                    resource: BindingResource::TextureView(&diffuse_texture_view),
-                },
-                BindGroupEntry {
-                    binding: 1,
-                    resource: BindingResource::Sampler(&diffuse_sampler),
-                },
-            ],
-            label: Some("diffuse_bind_group"),
-        });
-        // 好家伙纹理的东西真不少
 
         let mut render_pipelines = HashMap::new();
 
@@ -329,7 +228,7 @@ impl WGPUInstance {
         fn position_texture(
             device: &Device,
             config: &SurfaceConfiguration,
-            texture_bind_group_layout: BindGroupLayout,
+            texture_bind_group_layout: &BindGroupLayout,
         ) -> Result<RenderPipeline, Exception> {
             let shader_path: String = "position_texture".into();
             let binding =
@@ -341,7 +240,7 @@ impl WGPUInstance {
             });
             let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
                 label: Some((shader_path.clone() + "_pipeline_layout").as_str()),
-                bind_group_layouts: &[&texture_bind_group_layout],
+                bind_group_layouts: &[texture_bind_group_layout],
                 push_constant_ranges: &[],
             });
             let pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
@@ -382,7 +281,7 @@ impl WGPUInstance {
         }
         render_pipelines.insert(
             "position_texture".into(),
-            position_texture(&device, &config, texture_bind_group_layout).unwrap(),
+            position_texture(&device, &config, &texture_bind_group_layout).unwrap(),
         );
 
         let render_objects = Vec::new();
@@ -395,7 +294,7 @@ impl WGPUInstance {
             config,
             size,
             render_pipelines,
-            diffuse_bind_group,
+            texture_bind_group_layout,
             render_objects,
         }
     }
@@ -431,7 +330,11 @@ impl WGPUInstance {
         // buffer.set_text(&mut font_system, "Hello Akiraka!", Attrs::new().family(glyphon::Family::Serif), glyphon::Shaping::Advanced);
         // buffer.shape_until_scroll(&mut font_system);
 
-        let mut texture = crate::wgpu::texture::Texture::from_bytes(&Assets::get("textures/happy-tree.png").unwrap().data, &self);
+        let mut texture = crate::wgpu::texture::Texture::from_bytes(
+            &Assets::get("textures/happy-tree.png").unwrap().data,
+            &self.texture_bind_group_layout,
+            &self,
+        );
         // 啥也不是 o.0
         let output = self.surface.get_current_texture()?;
         let view = output
@@ -456,7 +359,7 @@ impl WGPUInstance {
                             b: 0.0,
                             a: 0.0,
                         }),
-                        store: true
+                        store: true,
                     },
                 })],
                 depth_stencil_attachment: None,
@@ -506,26 +409,30 @@ impl WGPUInstance {
                     render_pass
                         .set_pipeline(&self.render_pipelines.get("position_texture").unwrap());
                     // render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
-                    &texture.bind(&mut render_pass);
+                    let _ = &texture.bind(&mut render_pass);
                     render_pass.set_vertex_buffer(0, VERTEX_BUFFERS.last().unwrap().slice(..));
                     render_pass.set_index_buffer(
                         INDEX_BUFFERS.last().unwrap().slice(..),
                         wgpu::IndexFormat::Uint16,
                     );
-                    render_pass.draw_indexed(0..cache::get_index(obj.index_location).len() as u32, 0, 0..1); // 2.
+                    render_pass.draw_indexed(
+                        0..cache::get_index(obj.index_location).len() as u32,
+                        0,
+                        0..1,
+                    ); // 2.
                 }
             }
 
             // TODO: 测试
             // text_renderer.prepare(
-            //     &self.device, 
+            //     &self.device,
             //     &self.queue,
-            //     &mut font_system, 
-            //     &mut atlas, 
+            //     &mut font_system,
+            //     &mut atlas,
             //     Resolution {
             //         width: self.size.width,
             //         height: self.config.height,
-            //     }, 
+            //     },
             //     [TextArea {
             //         buffer: &buffer,
             //         left: 10.0,
@@ -538,7 +445,7 @@ impl WGPUInstance {
             //             bottom: 160,
             //         },
             //         default_color: glyphon::Color::rgb(255, 255, 255)
-            //     }], 
+            //     }],
             //     &mut cache).unwrap();
             // text_renderer.render(&atlas, &mut render_pass).unwrap();
         }
@@ -548,7 +455,7 @@ impl WGPUInstance {
         self.render_objects.clear();
         cache::clear_vertex();
         cache::clear_index();
-        &texture.destroy();
+        let _ = &texture.destroy();
         Ok(())
     }
 }

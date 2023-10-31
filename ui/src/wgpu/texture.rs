@@ -1,4 +1,9 @@
-use wgpu::{BindGroup, Extent3d, TextureFormat, TextureUsages, ImageCopyTexture, TextureAspect, Origin3d, ImageDataLayout, util::{BufferInitDescriptor, DeviceExt}, BufferUsages, CommandEncoderDescriptor, SamplerDescriptor, TextureViewDescriptor, BindGroupLayoutDescriptor, BindGroupLayoutEntry, ShaderStages, BindingType, TextureViewDimension, TextureSampleType, SamplerBindingType, BindGroupDescriptor, BindGroupEntry, BindingResource, RenderPass};
+use wgpu::{
+    util::{BufferInitDescriptor, DeviceExt},
+    BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout, BindingResource, BufferUsages,
+    CommandEncoderDescriptor, Extent3d, ImageCopyTexture, ImageDataLayout, Origin3d, RenderPass,
+    SamplerDescriptor, TextureAspect, TextureFormat, TextureUsages, TextureViewDescriptor,
+};
 
 use super::WGPUInstance;
 
@@ -8,13 +13,17 @@ pub struct Texture {
     // bind_group_layout: Layout,
     // bind_group_ptr: *mut u8,
     // bind_group: &'static BindGroup,
-    bind_group_position: usize,
-    size: Extent3d,
-    texture: wgpu::Texture
+    pub bind_group_position: usize,
+    pub size: Extent3d,
+    pub texture: wgpu::Texture,
 }
 
 impl Texture {
-    pub fn from_bytes(bytes: &[u8], instance: &WGPUInstance) -> Texture {
+    pub fn from_bytes(
+        bytes: &[u8],
+        texture_bind_group_layout: &BindGroupLayout,
+        instance: &WGPUInstance,
+    ) -> Texture {
         let image = image::load_from_memory(bytes).unwrap();
         let rgba = image.to_rgba8();
 
@@ -59,9 +68,11 @@ impl Texture {
             usage: BufferUsages::COPY_SRC,
         });
 
-        let mut encoder = instance.device.create_command_encoder(&CommandEncoderDescriptor {
-            label: Some("texture_buffer_copy_encoder"),
-        });
+        let mut encoder = instance
+            .device
+            .create_command_encoder(&CommandEncoderDescriptor {
+                label: Some("texture_buffer_copy_encoder"),
+            });
 
         encoder.copy_buffer_to_texture(
             wgpu::ImageCopyBuffer {
@@ -94,28 +105,28 @@ impl Texture {
             ..Default::default()
         });
 
-        let texture_bind_group_layout =
-            instance.device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-                entries: &[
-                    BindGroupLayoutEntry {
-                        binding: 0,
-                        visibility: ShaderStages::FRAGMENT,
-                        ty: BindingType::Texture {
-                            multisampled: false,
-                            view_dimension: TextureViewDimension::D2,
-                            sample_type: TextureSampleType::Float { filterable: true },
-                        },
-                        count: None,
-                    },
-                    BindGroupLayoutEntry {
-                        binding: 1,
-                        visibility: ShaderStages::FRAGMENT,
-                        ty: BindingType::Sampler(SamplerBindingType::Filtering),
-                        count: None,
-                    },
-                ],
-                label: Some("texture_bind_group_layout"),
-            });
+        // let texture_bind_group_layout =
+        //     instance.device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+        //         entries: &[
+        //             BindGroupLayoutEntry {
+        //                 binding: 0,
+        //                 visibility: ShaderStages::FRAGMENT,
+        //                 ty: BindingType::Texture {
+        //                     multisampled: false,
+        //                     view_dimension: TextureViewDimension::D2,
+        //                     sample_type: TextureSampleType::Float { filterable: true },
+        //                 },
+        //                 count: None,
+        //             },
+        //             BindGroupLayoutEntry {
+        //                 binding: 1,
+        //                 visibility: ShaderStages::FRAGMENT,
+        //                 ty: BindingType::Sampler(SamplerBindingType::Filtering),
+        //                 count: None,
+        //             },
+        //         ],
+        //         label: Some("texture_bind_group_layout"),
+        //     });
 
         let bind_group = instance.device.create_bind_group(&BindGroupDescriptor {
             layout: &texture_bind_group_layout,
@@ -132,30 +143,6 @@ impl Texture {
             label: Some("bind_group"),
         });
 
-        // 这位更是重量级
-        // 手动分配内存真有你的
-        // 这不也是没办法吗？
-        // let bind_group_layout = Layout::new::<BindGroup>();
-        // let bind_group_layout = Layout::for_value::<BindGroup>(&bind_group);
-        // let bind_group_ptr = unsafe {
-        //     let ptr = std::alloc::alloc(bind_group_layout);
-        //     if ptr.is_null() {
-        //         handle_alloc_error(bind_group_layout);
-        //     }
-        //     println!("{:?}", ptr);
-        //     // println!("{:?}", *(ptr as *mut BindGroup));
-        //     *(ptr as *mut BindGroup) = bind_group;
-        //     // &*(ptr as *mut BindGroup)
-        //     ptr
-        // };
-
-        // let bind_group_ptr: *mut u8 = std::ptr::null_mut();
-
-        // let bind_group_position = unsafe {
-            // bind_groups.(bind_group);
-            // bind_groups.len() - 1
-        // };
-
         let bind_group_position = unsafe {
             let mut x: usize = 0;
             for i in 0..BIND_GROUPS.len() {
@@ -168,9 +155,6 @@ impl Texture {
         };
 
         Texture {
-            // bind_group_ptr,
-            // bind_group_layout,
-            // bind_group,
             bind_group_position,
             size: texture_size,
             texture,
@@ -178,9 +162,11 @@ impl Texture {
     }
 
     pub fn bind(&mut self, render_pass: &mut RenderPass) {
-        // render_pass.set_bind_group(0, &self.bind_group, &[]);
-        // render_pass.set_bind_group(0, unsafe { &*(self.bind_group_ptr as *mut BindGroup) }, &[]);
-        render_pass.set_bind_group(0, unsafe { BIND_GROUPS.get(self.bind_group_position.clone()).unwrap() }, &[]);
+        render_pass.set_bind_group(
+            0,
+            unsafe { BIND_GROUPS.get(self.bind_group_position.clone()).unwrap() },
+            &[],
+        );
     }
 
     // 一定要调用！！！
