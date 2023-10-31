@@ -505,8 +505,8 @@ impl WGPUInstance {
 
                     render_pass
                         .set_pipeline(&self.render_pipelines.get("position_texture").unwrap());
-                    render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
-                    // texture.bind(&mut render_pass);
+                    // render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
+                    &texture.bind(&mut render_pass);
                     render_pass.set_vertex_buffer(0, VERTEX_BUFFERS.last().unwrap().slice(..));
                     render_pass.set_index_buffer(
                         INDEX_BUFFERS.last().unwrap().slice(..),
@@ -548,6 +548,7 @@ impl WGPUInstance {
         self.render_objects.clear();
         cache::clear_vertex();
         cache::clear_index();
+        &texture.destroy();
         Ok(())
     }
 }

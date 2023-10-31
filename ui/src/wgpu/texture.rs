@@ -1,16 +1,14 @@
-use std::{borrow::BorrowMut, alloc::{Layout, handle_alloc_error}, collections::{HashMap, HashSet}};
-
 use wgpu::{BindGroup, Extent3d, TextureFormat, TextureUsages, ImageCopyTexture, TextureAspect, Origin3d, ImageDataLayout, util::{BufferInitDescriptor, DeviceExt}, BufferUsages, CommandEncoderDescriptor, SamplerDescriptor, TextureViewDescriptor, BindGroupLayoutDescriptor, BindGroupLayoutEntry, ShaderStages, BindingType, TextureViewDimension, TextureSampleType, SamplerBindingType, BindGroupDescriptor, BindGroupEntry, BindingResource, RenderPass};
-
-use crate::Exception;
 
 use super::WGPUInstance;
 
+static mut BIND_GROUPS: Vec<BindGroup> = Vec::new();
+
 pub struct Texture {
-    bind_group_layout: Layout,
-    bind_group_ptr: *mut u8,
+    // bind_group_layout: Layout,
+    // bind_group_ptr: *mut u8,
     // bind_group: &'static BindGroup,
-    // bind_group_position: usize,
+    bind_group_position: usize,
     size: Extent3d,
     texture: wgpu::Texture
 }
@@ -138,30 +136,42 @@ impl Texture {
         // 手动分配内存真有你的
         // 这不也是没办法吗？
         // let bind_group_layout = Layout::new::<BindGroup>();
-        let bind_group_layout = Layout::for_value::<BindGroup>(&bind_group);
-        let bind_group_ptr = unsafe {
-            let ptr = std::alloc::alloc(bind_group_layout);
-            if ptr.is_null() {
-                handle_alloc_error(bind_group_layout);
-            }
-            println!("{:?}", ptr);
-            // println!("{:?}", *(ptr as *mut BindGroup));
-            *(ptr as *mut BindGroup) = bind_group;
-            // &*(ptr as *mut BindGroup)
-            ptr
-        };
+        // let bind_group_layout = Layout::for_value::<BindGroup>(&bind_group);
+        // let bind_group_ptr = unsafe {
+        //     let ptr = std::alloc::alloc(bind_group_layout);
+        //     if ptr.is_null() {
+        //         handle_alloc_error(bind_group_layout);
+        //     }
+        //     println!("{:?}", ptr);
+        //     // println!("{:?}", *(ptr as *mut BindGroup));
+        //     *(ptr as *mut BindGroup) = bind_group;
+        //     // &*(ptr as *mut BindGroup)
+        //     ptr
+        // };
 
-        let bind_group_ptr: *mut u8 = std::ptr::null_mut();
+        // let bind_group_ptr: *mut u8 = std::ptr::null_mut();
 
         // let bind_group_position = unsafe {
             // bind_groups.(bind_group);
             // bind_groups.len() - 1
         // };
 
+        let bind_group_position = unsafe {
+            let mut x: usize = 0;
+            for i in 0..BIND_GROUPS.len() {
+                if BIND_GROUPS.get(i).is_none() {
+                    x = i
+                }
+            }
+            BIND_GROUPS.insert(x, bind_group);
+            x
+        };
+
         Texture {
-            bind_group_ptr,
-            bind_group_layout,
+            // bind_group_ptr,
+            // bind_group_layout,
             // bind_group,
+            bind_group_position,
             size: texture_size,
             texture,
         }
@@ -169,15 +179,17 @@ impl Texture {
 
     pub fn bind(&mut self, render_pass: &mut RenderPass) {
         // render_pass.set_bind_group(0, &self.bind_group, &[]);
-        render_pass.set_bind_group(0, unsafe { &*(self.bind_group_ptr as *mut BindGroup) }, &[]);
+        // render_pass.set_bind_group(0, unsafe { &*(self.bind_group_ptr as *mut BindGroup) }, &[]);
+        render_pass.set_bind_group(0, unsafe { BIND_GROUPS.get(self.bind_group_position.clone()).unwrap() }, &[]);
     }
 
     // 一定要调用！！！
     // 不然内存泄漏把你搞哭
-    pub fn destroy(&'static mut self) {
+    pub fn destroy(&mut self) {
         self.texture.destroy();
         unsafe {
-            std::alloc::dealloc(self.bind_group_ptr, self.bind_group_layout);
+            // std::alloc::dealloc(self.bind_group_ptr, self.bind_group_layout);
+            BIND_GROUPS.remove(self.bind_group_position);
         }
     }
 }
