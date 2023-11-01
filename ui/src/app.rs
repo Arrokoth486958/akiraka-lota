@@ -103,7 +103,7 @@ pub fn launch() {
                         }
                         WindowEvent::KeyboardInput { .. } => {
                             wgpu_instance.input(event);
-                            wgpu_instance.update();
+                            wgpu_instance.update(event);
                         }
                         WindowEvent::RedrawRequested => {
                             // TODO: Debug
@@ -144,7 +144,7 @@ pub fn launch() {
                             // let cache = SwashCache::new();
                             // let atlas = TextAtlas::new(&wgpu_instance.device, &wgpu_instance.queue, wgpu_instance.config.format);
 
-                            wgpu_instance.update();
+                            wgpu_instance.update(event);
                             match wgpu_instance.render() {
                                 Ok(()) => {}
                                 Err(SurfaceError::Lost) => {

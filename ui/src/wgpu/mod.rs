@@ -16,8 +16,11 @@ use wgpu::{
     TextureViewDimension, VertexState,
 };
 use wgpu::{Buffer, BufferAddress, VertexAttribute, VertexBufferLayout};
+use winit::event::Event;
 use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
 
+use crate::widget::Widget;
+use crate::widget::colored_block::ColoredBlock;
 use crate::{assets::Assets, Exception};
 
 #[repr(C)]
@@ -67,6 +70,7 @@ pub struct WGPUInstance {
     pub render_pipelines: HashMap<String, RenderPipeline>,
     pub texture_bind_group_layout: BindGroupLayout,
     pub render_objects: Vec<RenderObject>,
+    pub base_widget: Box<dyn Widget>,
 }
 
 static mut VERTEX_BUFFERS: Vec<Buffer> = Vec::new();
@@ -296,6 +300,7 @@ impl WGPUInstance {
             render_pipelines,
             texture_bind_group_layout,
             render_objects,
+            base_widget: Box::new(ColoredBlock::new((0, 0), (0, 0)))
         }
     }
 
@@ -314,8 +319,9 @@ impl WGPUInstance {
         false
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self, event: &WindowEvent) {
         // TODO: 啥也没有 owo
+            self.base_widget.update(event);
     }
 
     pub fn render(&mut self) -> Result<(), SurfaceError> {
