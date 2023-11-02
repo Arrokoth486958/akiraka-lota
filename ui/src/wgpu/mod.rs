@@ -16,11 +16,12 @@ use wgpu::{
     TextureViewDimension, VertexState,
 };
 use wgpu::{Buffer, BufferAddress, VertexAttribute, VertexBufferLayout};
-use winit::event::Event;
+
 use winit::{dpi::PhysicalSize, event::WindowEvent, window::Window};
 
-use crate::widget::Widget;
+use crate::renderer::RenderSystem;
 use crate::widget::colored_block::ColoredBlock;
+use crate::widget::Widget;
 use crate::{assets::Assets, Exception};
 
 #[repr(C)]
@@ -66,6 +67,7 @@ pub struct WGPUInstance {
     pub device: Device,
     pub queue: Queue,
     pub config: SurfaceConfiguration,
+    pub scale_factor: f64,
     pub size: PhysicalSize<u32>,
     pub render_pipelines: HashMap<String, RenderPipeline>,
     pub texture_bind_group_layout: BindGroupLayout,
@@ -296,11 +298,12 @@ impl WGPUInstance {
             device,
             queue,
             config,
+            scale_factor: window.scale_factor(),
             size,
             render_pipelines,
             texture_bind_group_layout,
             render_objects,
-            base_widget: Box::new(ColoredBlock::new((0, 0), (0, 0)))
+            base_widget: Box::new(ColoredBlock::new((64, 64), (16, 16))),
         }
     }
 
@@ -321,7 +324,7 @@ impl WGPUInstance {
 
     pub fn update(&mut self, event: &WindowEvent) {
         // TODO: 啥也没有 owo
-            self.base_widget.update(event);
+        self.base_widget.update(event);
     }
 
     pub fn render(&mut self) -> Result<(), SurfaceError> {
@@ -336,11 +339,11 @@ impl WGPUInstance {
         // buffer.set_text(&mut font_system, "Hello Akiraka!", Attrs::new().family(glyphon::Family::Serif), glyphon::Shaping::Advanced);
         // buffer.shape_until_scroll(&mut font_system);
 
-        let mut texture = crate::wgpu::texture::Texture::from_bytes(
-            &Assets::get("textures/happy-tree.png").unwrap().data,
-            &self.texture_bind_group_layout,
-            &self,
-        );
+        // let mut texture = crate::wgpu::texture::Texture::from_bytes(
+        //     &Assets::get("textures/happy-tree.png").unwrap().data,
+        //     &self.texture_bind_group_layout,
+        //     &self,
+        // );
         // 啥也不是 o.0
         let output = self.surface.get_current_texture()?;
         let view = output
@@ -371,18 +374,27 @@ impl WGPUInstance {
                 depth_stencil_attachment: None,
             });
 
-            // 清除上一循环的缓冲
-            unsafe {
-                for buffer in &VERTEX_BUFFERS {
-                    buffer.destroy();
-                }
-                VERTEX_BUFFERS.clear();
+            let mut render_system = RenderSystem {
+                size: (self.size.width, self.size.height),
+                scale_factor: self.scale_factor,
+                render_objects: &mut self.render_objects,
+            };
+            self.base_widget.render(&mut render_system);
+            
+            // // 清除上一循环的缓冲
+            // unsafe {
+            //     for buffer in &VERTEX_BUFFERS {
+            //         buffer.destroy();
+            //     }
+            //     VERTEX_BUFFERS.clear();
 
-                for buffer in &INDEX_BUFFERS {
-                    buffer.destroy();
-                }
-                INDEX_BUFFERS.clear();
-            }
+            //     for buffer in &INDEX_BUFFERS {
+            //         buffer.destroy();
+            //     }
+            //     INDEX_BUFFERS.clear();
+            // }
+
+            // println!("{:?}", self.render_objects.len());
 
             // 然后渲染这一循环
             for (i, obj) in self.render_objects.iter().enumerate() {
@@ -413,9 +425,8 @@ impl WGPUInstance {
                     INDEX_BUFFERS.push(index_buffer);
 
                     render_pass
-                        .set_pipeline(&self.render_pipelines.get("position_texture").unwrap());
-                    // render_pass.set_bind_group(0, &self.diffuse_bind_group, &[]);
-                    let _ = &texture.bind(&mut render_pass);
+                        .set_pipeline(&self.render_pipelines.get("position_color").unwrap());
+                    // let _ = &texture.bind(&mut render_pass);
                     render_pass.set_vertex_buffer(0, VERTEX_BUFFERS.last().unwrap().slice(..));
                     render_pass.set_index_buffer(
                         INDEX_BUFFERS.last().unwrap().slice(..),
@@ -461,7 +472,7 @@ impl WGPUInstance {
         self.render_objects.clear();
         cache::clear_vertex();
         cache::clear_index();
-        let _ = &texture.destroy();
+        // let _ = &texture.destroy();
         Ok(())
     }
 }

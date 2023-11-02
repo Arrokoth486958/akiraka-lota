@@ -1,5 +1,7 @@
 use winit::event::WindowEvent;
 
+use crate::{wgpu::WGPUInstance, renderer::{self, RenderSystem}};
+
 use super::Widget;
 
 pub struct ColoredBlock {
@@ -30,8 +32,9 @@ impl Widget for ColoredBlock {
         self.pos
     }
 
-    fn render(&mut self, render_pass: &wgpu::RenderPass) {
+    fn render(&mut self, render_system: &mut RenderSystem) {
         // TODO: 颜色块渲染
+        render_system.rect(self.pos, self.size)
     }
 
     fn update(&mut self, event: &WindowEvent) {

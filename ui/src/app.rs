@@ -107,38 +107,38 @@ pub fn launch() {
                         }
                         WindowEvent::RedrawRequested => {
                             // TODO: Debug
-                            let x = SystemTime::now()
-                                .duration_since(UNIX_EPOCH)
-                                .unwrap()
-                                .as_millis()
-                                - start_time;
-                            let x: f32 = (x as f32 / 10000.0).to_degrees().sin();
+                            // let x = SystemTime::now()
+                            //     .duration_since(UNIX_EPOCH)
+                            //     .unwrap()
+                            //     .as_millis()
+                            //     - start_time;
+                            // let x: f32 = (x as f32 / 10000.0).to_degrees().sin();
                             // println!("{:?}", x);
-                            wgpu_instance.render_objects.push(RenderObject::new(
-                                vec![
-                                    Vertex {
-                                        position: [-1.0 * x, -1.0 * x, 0.0],
-                                        color: [0.0, 0.0, 0.0],
-                                        tex_coords: [0.0, 0.0],
-                                    },
-                                    Vertex {
-                                        position: [1.0 * x, -1.0 * x, 0.0],
-                                        color: [0.0, 0.0, 0.0],
-                                        tex_coords: [1.0, 0.0],
-                                    },
-                                    Vertex {
-                                        position: [1.0 * x, 1.0 * x, 0.0],
-                                        color: [0.0, 0.0, 0.0],
-                                        tex_coords: [1.0, 1.0],
-                                    },
-                                    Vertex {
-                                        position: [-1.0 * x, 1.0 * x, 0.0],
-                                        color: [0.0, 0.0, 0.0],
-                                        tex_coords: [0.0, 1.0],
-                                    },
-                                ],
-                                vec![0, 1, 2, 0, 2, 3],
-                            ));
+                            // wgpu_instance.render_objects.push(RenderObject::new(
+                            //     vec![
+                            //         Vertex {
+                            //             position: [-1.0 * x, -1.0 * x, 0.0],
+                            //             color: [0.0, 0.0, 0.0],
+                            //             tex_coords: [0.0, 0.0],
+                            //         },
+                            //         Vertex {
+                            //             position: [1.0 * x, -1.0 * x, 0.0],
+                            //             color: [0.0, 0.0, 0.0],
+                            //             tex_coords: [1.0, 0.0],
+                            //         },
+                            //         Vertex {
+                            //             position: [1.0 * x, 1.0 * x, 0.0],
+                            //             color: [0.0, 0.0, 0.0],
+                            //             tex_coords: [1.0, 1.0],
+                            //         },
+                            //         Vertex {
+                            //             position: [-1.0 * x, 1.0 * x, 0.0],
+                            //             color: [0.0, 0.0, 0.0],
+                            //             tex_coords: [0.0, 1.0],
+                            //         },
+                            //     ],
+                            //     vec![0, 1, 2, 0, 2, 3],
+                            // ));
 
                             // let font_system = FontSystem::new();
                             // let cache = SwashCache::new();
