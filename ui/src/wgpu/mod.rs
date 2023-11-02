@@ -4,16 +4,17 @@ pub mod texture;
 use std::collections::HashMap;
 
 use bytemuck::{Pod, Zeroable};
-use wgpu::util::DeviceExt;
+use wgpu::util::{BufferInitDescriptor, DeviceExt};
 use wgpu::{
-    Adapter, Backends, BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry,
-    BindingType, BlendState, ColorTargetState, ColorWrites, CompositeAlphaMode, Device,
-    DeviceDescriptor, Face, Features, FragmentState, Instance, InstanceDescriptor, Limits, LoadOp,
-    MultisampleState, Operations, PipelineLayoutDescriptor, PowerPreference, PresentMode,
-    PrimitiveState, Queue, RenderPassColorAttachment, RenderPassDescriptor, RenderPipeline,
-    RenderPipelineDescriptor, RequestAdapterOptions, SamplerBindingType, ShaderModuleDescriptor,
-    ShaderStages, Surface, SurfaceConfiguration, SurfaceError, TextureSampleType, TextureUsages,
-    TextureViewDimension, VertexState,
+    Adapter, Backends, BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
+    BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingType, BlendState, BufferUsages,
+    ColorTargetState, ColorWrites, CompositeAlphaMode, Device, DeviceDescriptor, Face, Features,
+    FragmentState, Instance, InstanceDescriptor, Limits, LoadOp, MultisampleState, Operations,
+    PipelineLayoutDescriptor, PowerPreference, PresentMode, PrimitiveState, Queue,
+    RenderPassColorAttachment, RenderPassDescriptor, RenderPipeline, RenderPipelineDescriptor,
+    RequestAdapterOptions, SamplerBindingType, ShaderModuleDescriptor, ShaderStages, Surface,
+    SurfaceConfiguration, SurfaceError, TextureSampleType, TextureUsages, TextureViewDimension,
+    VertexState,
 };
 use wgpu::{Buffer, BufferAddress, VertexAttribute, VertexBufferLayout};
 
@@ -70,7 +71,9 @@ pub struct WGPUInstance {
     pub scale_factor: f64,
     pub size: PhysicalSize<u32>,
     pub render_pipelines: HashMap<String, RenderPipeline>,
-    pub texture_bind_group_layout: BindGroupLayout,
+    // pub texture_bind_group_layout: BindGroupLayout,
+    pub surface_size_buffer: Buffer,
+    pub surface_size_bind_group: BindGroup,
     pub render_objects: Vec<RenderObject>,
     pub base_widget: Box<dyn Widget>,
 }
@@ -169,12 +172,43 @@ impl WGPUInstance {
                 label: Some("texture_bind_group_layout"),
             });
 
+        // 屏幕大小Uniform
+        let surface_size_buffer = device.create_buffer_init(&BufferInitDescriptor {
+            label: Some("surface_size_uniform_buffer"),
+            contents: bytemuck::bytes_of(&[size.width as f32, size.height as f32, 1.0]),
+            usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
+        });
+
+        let surface_size_bind_group_layout =
+            device.create_bind_group_layout(&BindGroupLayoutDescriptor {
+                label: Some("surface_size_uniform_layout"),
+                entries: &[BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: ShaderStages::VERTEX,
+                    ty: BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                }],
+            });
+        let surface_size_bind_group = device.create_bind_group(&BindGroupDescriptor {
+            label: Some("surface_size_bind_group"),
+            layout: &surface_size_bind_group_layout,
+            entries: &[BindGroupEntry {
+                binding: 0,
+                resource: surface_size_buffer.as_entire_binding(),
+            }],
+        });
+
         let mut render_pipelines = HashMap::new();
 
         // Position Color
         fn position_color(
             device: &Device,
             config: &SurfaceConfiguration,
+            surface_size_bind_group: &BindGroupLayout,
         ) -> Result<RenderPipeline, Exception> {
             let shader_path: String = "position_color".into();
             let binding =
@@ -186,7 +220,7 @@ impl WGPUInstance {
             });
             let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
                 label: Some((shader_path.clone() + "_pipeline_layout").as_str()),
-                bind_group_layouts: &[],
+                bind_group_layouts: &[surface_size_bind_group],
                 push_constant_ranges: &[],
             });
             let pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
@@ -209,7 +243,8 @@ impl WGPUInstance {
                 primitive: PrimitiveState {
                     topology: wgpu::PrimitiveTopology::TriangleList,
                     strip_index_format: None,
-                    front_face: wgpu::FrontFace::Ccw,
+                    // 剔除部分
+                    front_face: wgpu::FrontFace::Cw,
                     cull_mode: Some(Face::Back),
                     polygon_mode: wgpu::PolygonMode::Fill,
                     unclipped_depth: false,
@@ -227,7 +262,7 @@ impl WGPUInstance {
         }
         render_pipelines.insert(
             "position_color".into(),
-            position_color(&device, &config).unwrap(),
+            position_color(&device, &config, &surface_size_bind_group_layout).unwrap(),
         );
 
         // Position Texture
@@ -301,9 +336,11 @@ impl WGPUInstance {
             scale_factor: window.scale_factor(),
             size,
             render_pipelines,
-            texture_bind_group_layout,
+            // texture_bind_group_layout,
+            surface_size_buffer,
+            surface_size_bind_group,
             render_objects,
-            base_widget: Box::new(ColoredBlock::new((64, 64), (16, 16))),
+            base_widget: Box::new(ColoredBlock::new((580, 380), (10, 10))),
         }
     }
 
@@ -380,7 +417,7 @@ impl WGPUInstance {
                 render_objects: &mut self.render_objects,
             };
             self.base_widget.render(&mut render_system);
-            
+
             // // 清除上一循环的缓冲
             // unsafe {
             //     for buffer in &VERTEX_BUFFERS {
@@ -424,14 +461,23 @@ impl WGPUInstance {
                     VERTEX_BUFFERS.push(vertex_buffer);
                     INDEX_BUFFERS.push(index_buffer);
 
-                    render_pass
-                        .set_pipeline(&self.render_pipelines.get("position_color").unwrap());
+                    render_pass.set_pipeline(&self.render_pipelines.get("position_color").unwrap());
                     // let _ = &texture.bind(&mut render_pass);
+
+                    // Uniform来了！
+                    self.queue.write_buffer(
+                        &self.surface_size_buffer,
+                        0,
+                        bytemuck::bytes_of(&[self.size.width as f32, self.size.height as f32, 1.0]),
+                    );
+                    render_pass.set_bind_group(0, &self.surface_size_bind_group, &[]);
+
                     render_pass.set_vertex_buffer(0, VERTEX_BUFFERS.last().unwrap().slice(..));
                     render_pass.set_index_buffer(
                         INDEX_BUFFERS.last().unwrap().slice(..),
                         wgpu::IndexFormat::Uint16,
                     );
+
                     render_pass.draw_indexed(
                         0..cache::get_index(obj.index_location).len() as u32,
                         0,

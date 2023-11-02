@@ -1,6 +1,6 @@
 use winit::event::WindowEvent;
 
-use crate::{wgpu::WGPUInstance, renderer::{self, RenderSystem}};
+use crate::renderer::RenderSystem;
 
 use super::Widget;
 
@@ -37,7 +37,7 @@ impl Widget for ColoredBlock {
         render_system.rect(self.pos, self.size)
     }
 
-    fn update(&mut self, event: &WindowEvent) {
+    fn update(&mut self, _event: &WindowEvent) {
         // 不用更新（也许？
     }
 }

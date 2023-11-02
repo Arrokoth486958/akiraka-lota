@@ -8,7 +8,7 @@ use winit::{
     window::{WindowBuilder, WindowButtons},
 };
 
-use crate::wgpu::{RenderObject, Vertex, WGPUInstance};
+use crate::wgpu::WGPUInstance;
 
 // struct LauncherState {
 //     // TODO: 用来传递应用启动参数

@@ -2,7 +2,7 @@ pub mod colored_block;
 
 use winit::event::WindowEvent;
 
-use crate::{wgpu::WGPUInstance, renderer::RenderSystem};
+use crate::renderer::RenderSystem;
 
 pub trait Widget {
     fn set_size(&mut self, size: (u32, u32));
