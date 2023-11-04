@@ -8,12 +8,12 @@ pub struct RenderSystem<'a> {
 }
 
 impl<'a> RenderSystem<'a> {
-    // TODO: [WIP] 转换X坐标
+    // 转换X坐标
     fn transform_x(&mut self, value: u32) -> f32 {
         (value as f32) / (self.scale_factor as f32)
     }
 
-    // TODO: [WIP] 转换Y坐标
+    // 转换Y坐标
     fn transform_y(&mut self, value: u32) -> f32 {
         (value as f32) / (self.scale_factor as f32)
     }
