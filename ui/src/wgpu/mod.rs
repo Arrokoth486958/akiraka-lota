@@ -74,7 +74,7 @@ pub struct WGPUInstance<'a> {
     pub scale_factor: f64,
     pub size: PhysicalSize<u32>,
     pub render_pipelines: HashMap<String, RenderPipeline>,
-    // pub texture_bind_group_layout: BindGroupLayout,
+    pub texture_bind_group_layout: BindGroupLayout,
     pub surface_size_buffer: Buffer,
     pub surface_size_bind_group: BindGroup,
     pub render_objects: Vec<RenderObject>,
@@ -273,6 +273,7 @@ impl<'a> WGPUInstance<'a> {
         fn position_texture(
             device: &Device,
             config: &SurfaceConfiguration,
+            surface_size_bind_group_layout: &BindGroupLayout,
             texture_bind_group_layout: &BindGroupLayout,
         ) -> Result<RenderPipeline, Exception> {
             let shader_path: String = "position_texture".into();
@@ -285,7 +286,7 @@ impl<'a> WGPUInstance<'a> {
             });
             let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
                 label: Some((shader_path.clone() + "_pipeline_layout").as_str()),
-                bind_group_layouts: &[texture_bind_group_layout],
+                bind_group_layouts: &[surface_size_bind_group_layout, texture_bind_group_layout],
                 push_constant_ranges: &[],
             });
             let pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
@@ -326,7 +327,7 @@ impl<'a> WGPUInstance<'a> {
         }
         render_pipelines.insert(
             "position_texture".into(),
-            position_texture(&device, &config, &texture_bind_group_layout).unwrap(),
+            position_texture(&device, &config, &surface_size_bind_group_layout, &texture_bind_group_layout).unwrap(),
         );
 
         let render_objects = Vec::new();
@@ -340,7 +341,7 @@ impl<'a> WGPUInstance<'a> {
             scale_factor: window.scale_factor(),
             size,
             render_pipelines,
-            // texture_bind_group_layout,
+            texture_bind_group_layout,
             surface_size_buffer,
             surface_size_bind_group,
             render_objects,
