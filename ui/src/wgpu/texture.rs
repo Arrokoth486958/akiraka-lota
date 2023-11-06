@@ -1,4 +1,4 @@
-use std::vec;
+use std::{vec, borrow::Cow};
 
 use wgpu::{
     util::{BufferInitDescriptor, DeviceExt},
@@ -9,20 +9,19 @@ use wgpu::{
 
 use super::WGPUInstance;
 
-pub struct Texture {
+pub struct Texture<'a> {
     pub size: Extent3d,
     pub texture: wgpu::Texture,
-    // 很生草的玩意
-    pub data: Vec<u8>,
+    pub data: Cow<'a, [u8]>,
     pub buffer: Buffer,
 }
 
-impl Texture {
+impl<'a> Texture<'a> {
     pub fn from_bytes(
-        bytes: &[u8],
+        bytes: Cow<'a, [u8]>,
         instance: &WGPUInstance,
-    ) -> Texture {
-        let image = image::load_from_memory(bytes).unwrap();
+    ) -> Texture<'a> {
+        let image = image::load_from_memory(&bytes).unwrap();
         let rgba = image.to_rgba8();
 
         use image::GenericImageView;
@@ -66,24 +65,22 @@ impl Texture {
             usage: BufferUsages::COPY_SRC,
         });
 
-        let data = Vec::from(bytes);
-
         Texture {
             size: texture_size,
             texture,
-            data,
+            data: bytes,
             buffer,
         }
     }
 
     pub fn bind(&mut self, queue: &mut Queue) {
-        // let boxed_slice = self.data.into_boxed_slice();
-        // queue.write_buffer(&self.buffer, 0, self.data.collec)
+        queue.write_buffer(&self.buffer, 0, &self.data);
     }
 
     // 一定要调用！！！
     // 不然内存泄漏把你搞哭
     pub fn destroy(&mut self) {
         self.texture.destroy();
+        self.buffer.destroy();
     }
 }

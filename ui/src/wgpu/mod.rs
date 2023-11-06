@@ -1,6 +1,7 @@
 pub(crate) mod cache;
 pub mod texture;
 
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 use bytemuck::{Pod, Zeroable};
@@ -24,6 +25,8 @@ use crate::renderer::RenderSystem;
 use crate::widget::colored_block::ColoredBlock;
 use crate::widget::Widget;
 use crate::{assets::Assets, Exception};
+
+use self::texture::Texture;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -62,7 +65,7 @@ impl RenderObject {
 
 // 好哎！
 // https://jinleili.github.io/learn-wgpu-zh/beginner/tutorial2-surface/
-pub struct WGPUInstance {
+pub struct WGPUInstance<'a> {
     pub instance: Instance,
     pub surface: Surface,
     pub device: Device,
@@ -76,12 +79,13 @@ pub struct WGPUInstance {
     pub surface_size_bind_group: BindGroup,
     pub render_objects: Vec<RenderObject>,
     pub base_widget: Box<dyn Widget>,
+    pub textures: Vec<Texture<'a>>
 }
 
 static mut VERTEX_BUFFERS: Vec<Buffer> = Vec::new();
 static mut INDEX_BUFFERS: Vec<Buffer> = Vec::new();
 
-impl WGPUInstance {
+impl<'a> WGPUInstance<'a> {
     pub fn new(window: &Window) -> Self {
         println!("Scalefactor: {:?}", window.scale_factor());
         let size = window.inner_size();
@@ -341,6 +345,7 @@ impl WGPUInstance {
             surface_size_bind_group,
             render_objects,
             base_widget: Box::new(ColoredBlock::new((580, 380), (10, 10))),
+            textures: Vec::new(),
         }
     }
 
@@ -381,6 +386,8 @@ impl WGPUInstance {
         //     &self.texture_bind_group_layout,
         //     &self,
         // );
+        let data: Cow<'a, [u8]> = Assets::get("textures/happy-tree.png").unwrap().data.clone();
+        self.textures.push(Texture::from_bytes(data, self));
         // 啥也不是 o.0
         let output = self.surface.get_current_texture()?;
         let view = output
