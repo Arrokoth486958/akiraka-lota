@@ -65,7 +65,7 @@ impl RenderObject {
 
 // 好哎！
 // https://jinleili.github.io/learn-wgpu-zh/beginner/tutorial2-surface/
-pub struct WGPUInstance<'a> {
+pub struct WGPUInstance {
     pub instance: Instance,
     pub surface: Surface,
     pub device: Device,
@@ -79,13 +79,13 @@ pub struct WGPUInstance<'a> {
     pub surface_size_bind_group: BindGroup,
     pub render_objects: Vec<RenderObject>,
     pub base_widget: Box<dyn Widget>,
-    pub textures: Vec<Texture<'a>>
+    pub textures: Vec<Texture>
 }
 
 static mut VERTEX_BUFFERS: Vec<Buffer> = Vec::new();
 static mut INDEX_BUFFERS: Vec<Buffer> = Vec::new();
 
-impl<'a> WGPUInstance<'a> {
+impl WGPUInstance {
     pub fn new(window: &Window) -> Self {
         println!("Scalefactor: {:?}", window.scale_factor());
         let size = window.inner_size();
@@ -222,7 +222,7 @@ impl<'a> WGPUInstance<'a> {
                 label: Some(shader_path.as_str()),
                 source: wgpu::ShaderSource::Wgsl(src.into()),
             });
-            let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
+            let pipeline_layout: wgpu::PipelineLayout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
                 label: Some((shader_path.clone() + "_pipeline_layout").as_str()),
                 bind_group_layouts: &[surface_size_bind_group],
                 push_constant_ranges: &[],
@@ -387,8 +387,7 @@ impl<'a> WGPUInstance<'a> {
         //     &self.texture_bind_group_layout,
         //     &self,
         // );
-        let data: Cow<'a, [u8]> = Assets::get("textures/happy-tree.png").unwrap().data.clone();
-        self.textures.push(Texture::from_bytes(data, self));
+        let data: Cow<'_, [u8]> = Assets::get("textures/happy-tree.png").unwrap().data.clone();
         // 啥也不是 o.0
         let output = self.surface.get_current_texture()?;
         let view = output
@@ -441,6 +440,7 @@ impl<'a> WGPUInstance<'a> {
 
             // println!("{:?}", self.render_objects.len());
 
+            Texture::from_bytes(&data, &self.texture_bind_group_layout, self).bind(&mut render_pass);
             // 然后渲染这一循环
             for (i, obj) in self.render_objects.iter().enumerate() {
                 // 因为涉及到全局变量所以需要unsafe
@@ -469,7 +469,8 @@ impl<'a> WGPUInstance<'a> {
                     VERTEX_BUFFERS.push(vertex_buffer);
                     INDEX_BUFFERS.push(index_buffer);
 
-                    render_pass.set_pipeline(&self.render_pipelines.get("position_color").unwrap());
+                    // render_pass.set_pipeline(&self.render_pipelines.get("position_color").unwrap());
+                    render_pass.set_pipeline(&self.render_pipelines.get("position_texture").unwrap());
                     // let _ = &texture.bind(&mut render_pass);
 
                     // Uniform来了！
