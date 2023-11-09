@@ -428,7 +428,7 @@ impl WGPUInstance {
         let mut buffer = glyphon::Buffer::new(&mut font_system, Metrics::new(30.0, 42.0));
 
         buffer.set_size(&mut font_system, self.size.width as f32, self.size.height as f32);
-        buffer.set_text(&mut font_system, "Hello Akiraka!", Attrs::new().family(glyphon::Family::Serif), glyphon::Shaping::Advanced);
+        buffer.set_text(&mut font_system, "Hello Waludo!", Attrs::new().family(glyphon::Family::Serif), glyphon::Shaping::Advanced);
         buffer.shape_until_scroll(&mut font_system);
 
         // 啥也不是 o.0
